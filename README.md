@@ -1,2 +1,2 @@
 # autolite
-Simple automation tool based on sqlite
+Simple automation tool based on sqlite3.
