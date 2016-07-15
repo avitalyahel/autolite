@@ -37,5 +37,7 @@ def _init_table(tname):
 if __name__ == '__main__':
     set_verbosity(1)
     connect()
-    init()
-    disconnect()
+    try:
+        init()
+    finally:
+        disconnect()
