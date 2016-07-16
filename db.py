@@ -30,14 +30,15 @@ def init():
 def _init_table(tname):
     cur = g_conn.cursor()
     cur.execute('DROP TABLE IF EXISTS ' + tname)
-    cur.execute('CREATE TABLE {} ({})'.format(tname, repr(TABLE_SCHEMAS[tname])))
-    verbose(1, 'initialized table', tname)
+    cur.execute('CREATE TABLE {} ({})'.format(tname, str(TABLE_SCHEMAS[tname])))
+    verbose(1, 'initialized table:', tname)
 
 
 def add_task(**kwargs):
     new_task = TABLE_SCHEMAS.tasks.new(**kwargs)
     sql = 'INSERT INTO tasks ({}) VALUES ({})'.format(*new_task.for_insert())
     g_conn.cursor().execute(sql)
+    verbose(1, 'added task', repr(new_task))
 
 
 if __name__ == '__main__':

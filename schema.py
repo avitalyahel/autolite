@@ -3,8 +3,11 @@ from types import AttrDict
 
 class TableSchema(AttrDict):
 
-    def __repr__(self):
+    def __str__(self):
         return ','.join(' '.join(kv) for kv in self.items())
+
+    def __repr__(self):
+        return ', '.join(': '.join([k, v]) for k, v in self.items() if v)
 
     def new(self, **kwargs):
         result = TableSchema((k, PYTYPES[v]()) for k, v in self.items())
