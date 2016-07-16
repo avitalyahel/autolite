@@ -34,10 +34,21 @@ def _init_table(tname):
     verbose(1, 'initialized table', tname)
 
 
+def add_task(**kwargs):
+    new_task = TABLE_SCHEMAS.tasks.new(**kwargs)
+    sql = 'INSERT INTO tasks ({}) VALUES ({})'.format(*new_task.for_insert())
+    g_conn.cursor().execute(sql)
+
+
 if __name__ == '__main__':
     set_verbosity(1)
     connect()
+
     try:
         init()
+        add_task(name='task1', schedule='daily')
+        add_task(name='task2', schedule='continuous')
+        print('all tasks:', g_conn.cursor().execute('SELECT * FROM tasks').fetchall())
+
     finally:
         disconnect()
