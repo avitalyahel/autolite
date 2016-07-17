@@ -35,10 +35,17 @@ def _init_table(tname):
 
 
 def add_task(**kwargs):
-    new_task = TABLE_SCHEMAS.tasks.new(**kwargs)
-    sql = 'INSERT INTO tasks ({}) VALUES ({})'.format(*new_task.for_insert())
+    task = TABLE_SCHEMAS.tasks.new(**kwargs)
+    sql = 'INSERT INTO tasks ({}) VALUES ({})'.format(*task.for_insert())
     g_conn.cursor().execute(sql)
-    verbose(1, 'added task', repr(new_task))
+    verbose(1, 'added task', repr(task))
+
+
+def update_task(**kwargs):
+    task = TABLE_SCHEMAS.tasks.new(**kwargs)
+    sql = 'UPDATE tasks SET {} WHERE name="{}"'.format(task.for_update(), kwargs['name'])
+    g_conn.cursor().execute(sql)
+    verbose(1, 'updated task:', repr(task))
 
 
 if __name__ == '__main__':
@@ -49,6 +56,7 @@ if __name__ == '__main__':
         init()
         add_task(name='task1', schedule='daily')
         add_task(name='task2', schedule='continuous')
+        update_task(name='task2', state='running')
         print('all tasks:', g_conn.cursor().execute('SELECT * FROM tasks').fetchall())
 
     finally:

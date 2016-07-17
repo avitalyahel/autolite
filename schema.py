@@ -18,6 +18,9 @@ class TableSchema(AttrDict):
         cols, vals = zip(*[(k, _quoted(v)) for k, v in self.items() if v])
         return ','.join(cols), ','.join(vals)
 
+    def for_update(self):
+        return ','.join('='.join([k, _quoted(v)]) for k, v in self.items() if v)
+
 
 def _quoted(val):
     if isinstance(val, str):
