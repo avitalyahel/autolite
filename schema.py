@@ -11,7 +11,7 @@ class TableSchema(AttrDict):
 
     def new(self, **kwargs):
         result = TableSchema((k, PYTYPES[v]()) for k, v in self.items())
-        result.update(dict((k, v) for k, v in kwargs.items() if k in result))
+        result.update(dict((k, _empty(v)) for k, v in kwargs.items() if k in result))
         return result
 
     def for_insert(self):
@@ -24,6 +24,10 @@ class TableSchema(AttrDict):
 
 def _quoted(val):
     return '"{}"'.format(val) if isinstance(val, str) else str(val)
+
+
+def _empty(val):
+    return '' if val is None else str(val)
 
 
 PYTYPES = dict(

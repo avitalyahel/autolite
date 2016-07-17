@@ -7,6 +7,23 @@ from verbosity import verbose, set_verbosity
 
 
 g_conn = None
+g_pragmas = AttrDict()  # {tname: TableColumns()}
+
+
+class TableColumns(object):
+
+    def __init__(self, *args, **kwargs):
+        if kwargs:
+            super(TableColumns, self).__init__(**kwargs)
+
+        else:
+            self._cols = args
+
+    def names(self):
+        return self._extract(1)
+
+    def _extract(self, index):
+        return (col[index] for col in self._cols)
 
 
 def connect():
@@ -32,6 +49,8 @@ def _init_table(tname):
     cur = g_conn.cursor()
     cur.execute('DROP TABLE IF EXISTS ' + tname)
     cur.execute('CREATE TABLE {} ({})'.format(tname, str(TABLE_SCHEMAS[tname])))
+    cols = cur.execute('PRAGMA table_info("{}")'.format(tname)).fetchall()
+    g_pragmas[tname] = TableColumns(*cols)
     verbose(1, 'initialized table:', tname)
 
 
@@ -49,6 +68,12 @@ def update_task(**kwargs):
     verbose(1, 'updated task:', repr(task))
 
 
+def get_task(name):
+    sql = 'SELECT * FROM tasks WHERE name="{}"'.format(name)
+    values = g_conn.cursor().execute(sql).fetchone()
+    return TABLE_SCHEMAS.tasks.new(**dict(zip(g_pragmas.tasks.names(), values)))
+
+
 if __name__ == '__main__':
     set_verbosity(1)
     connect()
@@ -58,6 +83,7 @@ if __name__ == '__main__':
         add_task(name='task1', schedule='daily')
         add_task(name='task2', schedule='continuous')
         update_task(name='task2', state='running')
+        verbose(0, 'got task', repr(get_task('task2')))
         verbose(0, 'all tasks:', g_conn.cursor().execute('SELECT * FROM tasks').fetchall())
 
     finally:
