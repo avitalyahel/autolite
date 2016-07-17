@@ -1,6 +1,7 @@
 import sqlite3
 
 from consts import DB_NAME
+from common import AttrDict
 from schema import TABLE_SCHEMAS
 from verbosity import verbose, set_verbosity
 

@@ -1,4 +1,4 @@
-from types import AttrDict
+from common import AttrDict
 
 
 class TableSchema(AttrDict):
