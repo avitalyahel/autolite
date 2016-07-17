@@ -23,11 +23,7 @@ class TableSchema(AttrDict):
 
 
 def _quoted(val):
-    if isinstance(val, str):
-        return '"{}"'.format(val)
-
-    else:
-        return str(val)
+    return '"{}"'.format(val) if isinstance(val, str) else str(val)
 
 
 PYTYPES = dict(
