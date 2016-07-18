@@ -74,6 +74,12 @@ def get_task(name):
     return TABLE_SCHEMAS.tasks.new(**dict(zip(g_pragmas.tasks.names(), values)))
 
 
+def delete_task(name):
+    sql = 'DELETE FROM tasks WHERE name="{}"'.format(name)
+    g_conn.cursor().execute(sql)
+    verbose(1, 'deleted task:', name)
+
+
 if __name__ == '__main__':
     set_verbosity(1)
     connect()
@@ -84,6 +90,7 @@ if __name__ == '__main__':
         add_task(name='task2', schedule='continuous')
         update_task(name='task2', state='running')
         verbose(1, 'got task', repr(get_task('task2')))
+        delete_task(name='task1')
         verbose(1, 'all tasks:', g_conn.cursor().execute('SELECT * FROM tasks').fetchall())
 
     finally:
