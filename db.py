@@ -83,8 +83,8 @@ if __name__ == '__main__':
         add_task(name='task1', schedule='daily')
         add_task(name='task2', schedule='continuous')
         update_task(name='task2', state='running')
-        verbose(0, 'got task', repr(get_task('task2')))
-        verbose(0, 'all tasks:', g_conn.cursor().execute('SELECT * FROM tasks').fetchall())
+        verbose(1, 'got task', repr(get_task('task2')))
+        verbose(1, 'all tasks:', g_conn.cursor().execute('SELECT * FROM tasks').fetchall())
 
     finally:
         disconnect()
