@@ -19,7 +19,8 @@ class TableColumns(object):
         else:
             self._cols = args
 
-    def names(self):
+    @property
+    def cols(self):
         return self._extract(1)
 
     def _extract(self, index):
@@ -90,7 +91,7 @@ def update_task(**kwargs):
 def get_task(name):
     sql = 'SELECT * FROM tasks WHERE name="{}"'.format(name)
     values = g_conn.cursor().execute(sql).fetchone()
-    return TABLE_SCHEMAS.tasks.new(**dict(zip(g_pragmas.tasks.names(), values)))
+    return TABLE_SCHEMAS.tasks.new(**dict(zip(g_pragmas.tasks.cols, values)))
 
 
 def delete_task(name):
