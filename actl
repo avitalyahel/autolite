@@ -6,6 +6,7 @@ Usage:
     actl task list [-v | -vv]
     actl task (get | delete) <name> [-v | -vv]
     actl task (add | update) <name> [--schedule=<schedule>] [--state=<state>] [-v | -vv]
+    actl reset [-v | -vv]
 
 Arguments:
     <name>      Name of task.
@@ -35,6 +36,14 @@ def actl(arguments):
 
     if arguments['task']:
         task(arguments)
+
+    elif arguments['reset']:
+        if input('Confirm Db reset [N/y]: ') == 'y':
+            db.init(drop=True)
+            print('Db have been reset!')
+
+        else:
+            print('Did not reset.')
 
 
 def task(arguments):
