@@ -93,7 +93,7 @@ def update_task(**kwargs):
     sql = 'UPDATE tasks SET {} WHERE name="{}"'.format(task.for_update(), kwargs['name'])
     g_conn.cursor().execute(sql)
     g_conn.commit()
-    verbose(1, 'updated task:', repr(task))
+    verbose(1, 'updated task', repr(task))
 
 
 def get_task(name):
