@@ -12,12 +12,16 @@ g_pragmas = AttrDict()  # {tname: TableColumns()}
 
 class TableColumns(object):
 
-    def __init__(self, *args, **kwargs):
-        if kwargs:
-            super(TableColumns, self).__init__(**kwargs)
+    def __init__(self, *args, sep='|'):
+        self._sep = sep
+        self._cols = args
 
-        else:
-            self._cols = args
+    def __repr__(self):
+        return self._sep.join(self.cols)
+
+    @property
+    def sep(self):
+        return self._sep
 
     @property
     def cols(self):
@@ -39,7 +43,7 @@ def disconnect():
     if g_conn is not None:
         g_conn.commit()
         g_conn.close()
-        verbose(1, 'closed connection to', DB_NAME)
+        verbose(1, 'closed connection to:', DB_NAME)
         g_conn = None
 
 
