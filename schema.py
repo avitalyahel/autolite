@@ -15,7 +15,7 @@ class TableSchema(AttrDict):
         return result
 
     def for_insert(self):
-        cols, vals = zip(*[(k, _quoted(v)) for k, v in self.items() if v])
+        cols, vals = zip(*[(k, _quoted(v)) for k, v in self.items()])
         return ','.join(cols), ','.join(vals)
 
     def for_update(self):
@@ -23,7 +23,7 @@ class TableSchema(AttrDict):
 
 
 def _quoted(val):
-    return '"{}"'.format(val) if isinstance(val, str) else str(val)
+    return '"{}"'.format(val) if isinstance(val, str) else _empty(val)
 
 
 def _empty(val):

@@ -36,6 +36,7 @@ def connect():
 def disconnect():
     global g_conn
     if g_conn is not None:
+        g_conn.commit()
         g_conn.close()
         verbose(1, 'closed connection to', DB_NAME)
         g_conn = None
@@ -58,6 +59,7 @@ def add_task(**kwargs):
     task = TABLE_SCHEMAS.tasks.new(**kwargs)
     sql = 'INSERT INTO tasks ({}) VALUES ({})'.format(*task.for_insert())
     g_conn.cursor().execute(sql)
+    g_conn.commit()
     verbose(1, 'added task', repr(task))
 
 
@@ -65,6 +67,7 @@ def update_task(**kwargs):
     task = TABLE_SCHEMAS.tasks.new(**kwargs)
     sql = 'UPDATE tasks SET {} WHERE name="{}"'.format(task.for_update(), kwargs['name'])
     g_conn.cursor().execute(sql)
+    g_conn.commit()
     verbose(1, 'updated task:', repr(task))
 
 
@@ -77,21 +80,26 @@ def get_task(name):
 def delete_task(name):
     sql = 'DELETE FROM tasks WHERE name="{}"'.format(name)
     g_conn.cursor().execute(sql)
+    g_conn.commit()
     verbose(1, 'deleted task:', name)
+
+
+def list_tasks(sep='\n'):
+    sql = 'SELECT * FROM tasks'
+    return sep.join('|'.join(row) for row in g_conn.cursor().execute(sql).fetchall())
 
 
 if __name__ == '__main__':
     set_verbosity(1)
     connect()
-
-    try:
-        init()
-        add_task(name='task1', schedule='daily')
-        add_task(name='task2', schedule='continuous')
-        update_task(name='task2', state='running')
-        verbose(1, 'got task', repr(get_task('task2')))
-        delete_task(name='task1')
-        verbose(1, 'all tasks:', g_conn.cursor().execute('SELECT * FROM tasks').fetchall())
-
-    finally:
-        disconnect()
+    init()
+    sep = '\n\t\t\t'
+    verbose(1, 'info tasks:', str(g_pragmas.tasks))
+    add_task(name='task1', schedule='daily')
+    verbose(1, 'all tasks:', '\t' + list_tasks(sep))
+    add_task(name='task2', schedule='continuous')
+    verbose(1, 'all tasks:', '\t' + list_tasks(sep))
+    update_task(name='task2', state='running')
+    verbose(1, 'got task', repr(get_task('task2')))
+    delete_task(name='task1')
+    verbose(1, 'all tasks:', '\t' + list_tasks(sep))
