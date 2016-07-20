@@ -10,5 +10,9 @@ def set_verbosity(level):
 
 
 def verbose(level, *args):
-    if g_verbosity_level > level - 1:
-        print(datetime.now(), *args)
+    if g_verbosity_level >= level:
+        if g_verbosity_level > 1:
+            print(datetime.now(), *args)
+
+        else:
+            print(*args)
