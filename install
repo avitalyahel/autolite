@@ -1,0 +1,53 @@
+#!/usr/local/bin/python3
+
+import os
+import sys
+
+from common import system_out
+from verbosity import verbose, set_verbosity
+from dependencies import DEPENDENCIES
+
+
+def install():
+    failed = {}
+    _installed = system_out('pip3 list')
+
+    for package, version in DEPENDENCIES.items():
+        if pip_entry(package, version) not in _installed:
+            if os.system('pip3 install {pkg}=={ver}'.format(pkg=package, ver=version)):
+                verbose(1, '[!] failed installation of package:', pip_entry(package, version))
+                failed.update({package: version})
+
+    return failed
+
+
+def verify():
+    missing = {}
+    _installed = system_out('pip3 list')
+
+    for package, version in DEPENDENCIES.items():
+        if pip_entry(package, version) not in _installed:
+            missing.update({package: version})
+
+    if missing:
+        print('[x] missing packages:')
+        print('\n\t'.join('{} ({})'.format(*pv) for pv in DEPENDENCIES.items()))
+        sys.exit(1)
+
+    else:
+        verbose(1, '[v] autolite installed Ok.')
+
+
+def pip_entry(pkg, ver):
+    return '{} ({})'.format(pkg, ver)
+
+
+if __name__ == '__main__':
+    set_verbosity(1)
+    failed = install()
+
+    if failed:
+        print('[x]', len(failed), 'failed installations')
+        sys.exit(1)
+
+    verify()
