@@ -1,0 +1,50 @@
+#!/usr/local/bin/python3
+'''
+autolite control tool.
+
+Usage:
+    actl task list [--help] [-v | -vv]
+    actl -h | --help
+    actl --version
+
+Options:
+    -h --help      Show this screen.
+    --version      Show version.
+    -v --verbose   Higher verbosity messages.
+'''
+
+import sys
+
+import db
+from verbosity import set_verbosity
+
+
+def actl(arguments):
+    db.init()
+
+    if arguments['task']:
+        task(arguments)
+
+
+def task(arguments):
+    if arguments['list']:
+        task_list()
+
+
+def task_list():
+    db.g_pragmas.tasks.sep = '\t'
+    print(db.g_pragmas.tasks)
+    print(db.list_tasks(colsep='\t'))
+
+
+if __name__ == '__main__':
+    from docopt import docopt
+    arguments = docopt(__doc__, version=open('version').read())
+
+    if arguments['--verbose']:
+        set_verbosity(arguments['--verbose'])
+
+    if arguments['--verbose'] > 1:
+        print(arguments)
+
+    sys.exit(actl(arguments))
