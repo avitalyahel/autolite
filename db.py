@@ -23,6 +23,10 @@ class TableColumns(object):
     def sep(self):
         return self._sep
 
+    @sep.setter
+    def sep(self, value):
+        self._sep = value
+
     @property
     def cols(self):
         return self._extract(1)
@@ -105,9 +109,9 @@ def delete_task(name):
     verbose(1, 'deleted task:', name)
 
 
-def list_tasks(sep='\n'):
+def list_tasks(rowsep='\n', colsep='|'):
     sql = 'SELECT * FROM tasks'
-    return sep.join('|'.join(row) for row in g_conn.cursor().execute(sql).fetchall())
+    return rowsep.join(colsep.join(row) for row in g_conn.cursor().execute(sql).fetchall())
 
 
 if __name__ == '__main__':
