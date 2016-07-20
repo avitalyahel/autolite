@@ -42,16 +42,32 @@ def disconnect():
         g_conn = None
 
 
-def init():
-    _init_table('tasks')
+def init(drop=False):
+    connect()
+
+    for tname in ['tasks']:
+        if drop or not load_pragma(tname):
+            _drop_create_table(tname)
+            load_pragma(tname)
 
 
-def _init_table(tname):
+def load_pragma(tname):
+    if tname not in g_pragmas:
+        cols = g_conn.cursor().execute('PRAGMA table_info("{}")'.format(tname)).fetchall()
+        if cols:
+            g_pragmas[tname] = TableColumns(*cols)
+            verbose(1, 'loaded pragma:', tname)
+
+        else:
+            return None
+
+    return g_pragmas[tname]
+
+
+def _drop_create_table(tname):
     cur = g_conn.cursor()
     cur.execute('DROP TABLE IF EXISTS ' + tname)
     cur.execute('CREATE TABLE {} ({})'.format(tname, str(TABLE_SCHEMAS[tname])))
-    cols = cur.execute('PRAGMA table_info("{}")'.format(tname)).fetchall()
-    g_pragmas[tname] = TableColumns(*cols)
     verbose(1, 'initialized table:', tname)
 
 
@@ -91,8 +107,7 @@ def list_tasks(sep='\n'):
 
 if __name__ == '__main__':
     set_verbosity(1)
-    connect()
-    init()
+    init(True)
     sep = '\n\t\t\t'
     verbose(1, 'info tasks:', str(g_pragmas.tasks))
     add_task(name='task1', schedule='daily')
