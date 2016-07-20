@@ -99,10 +99,17 @@ def update_task(**kwargs):
 def get_task(name):
     sql = 'SELECT * FROM tasks WHERE name="{}"'.format(name)
     values = g_conn.cursor().execute(sql).fetchone()
-    return TABLE_SCHEMAS.tasks.new(**dict(zip(g_pragmas.tasks.cols, values)))
+    if not values:
+        raise NameError('missing task: ' + name)
+
+    task = TABLE_SCHEMAS.tasks.new(**dict(zip(g_pragmas.tasks.cols, values)))
+    verbose(1, 'got task', repr(task))
+    return task
 
 
 def delete_task(name):
+    get_task(name)
+
     sql = 'DELETE FROM tasks WHERE name="{}"'.format(name)
     g_conn.cursor().execute(sql)
     g_conn.commit()
