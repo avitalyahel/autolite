@@ -3,20 +3,31 @@
 autolite control tool.
 
 Usage:
-    actl task list [--help] [-v | -vv]
-    actl -h | --help
-    actl --version
+    actl task list [-v | -vv]
+    actl task (get | delete) <name> [-v | -vv]
+    actl task (add | update) <name> [--schedule=<schedule>] [--state=<state>] [-v | -vv]
+
+Arguments:
+    <name>      Name of task.
 
 Options:
-    -h --help      Show this screen.
-    --version      Show version.
-    -v --verbose   Higher verbosity messages.
+    -h --help               Show this screen.
+    --version               Show version.
+    -v --verbose            Higher verbosity messages.
+    --schedule <schedule>   Run schedule [default: daily].
+    --state <state>         Task state [default: pending].
 '''
 
+import os
 import sys
 
 import db
 from verbosity import set_verbosity
+
+SELF_ABS_PATH = os.path.abspath(__file__)
+SELF_SUB_DIR = os.path.basename(os.path.dirname(SELF_ABS_PATH))
+
+PACKAGE_NAME = SELF_SUB_DIR
 
 
 def actl(arguments):
@@ -29,6 +40,30 @@ def actl(arguments):
 def task(arguments):
     if arguments['list']:
         task_list()
+
+    elif arguments['add']:
+        db.add_task(**_task_add_update_kwargs(arguments))
+
+    elif arguments['update']:
+        db.update_task(**_task_add_update_kwargs(arguments))
+
+    elif arguments['get'] or arguments['delete']:
+        try:
+            if arguments['get']:
+                print(repr(db.get_task(name=arguments['<name>'])))
+
+            else:
+                db.delete_task(name=arguments['<name>'])
+
+        except NameError as exc:
+            print(PACKAGE_NAME, 'Error:', exc)
+            sys.exit(1)
+
+
+def _task_add_update_kwargs(arguments):
+    result = dict(name=arguments['<name>'])
+    result.update(dict((arg, arguments['--{}'.format(arg)]) for arg in ['schedule', 'state']))
+    return result
 
 
 def task_list():
