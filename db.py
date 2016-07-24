@@ -80,7 +80,7 @@ def _drop_create_table(tname):
     verbose(1, 'initialized table:', tname)
 
 
-def add_task(**kwargs):
+def create_task(**kwargs):
     task = TABLE_SCHEMAS.tasks.new(**kwargs)
     sql = 'INSERT INTO tasks ({}) VALUES ({})'.format(*task.for_insert())
     g_conn.cursor().execute(sql)
@@ -96,7 +96,7 @@ def update_task(**kwargs):
     verbose(1, 'updated task', repr(task))
 
 
-def get_task(name):
+def read_task(name):
     sql = 'SELECT * FROM tasks WHERE name="{}"'.format(name)
     values = g_conn.cursor().execute(sql).fetchone()
     if not values:
@@ -108,7 +108,7 @@ def get_task(name):
 
 
 def delete_task(name):
-    get_task(name)
+    read_task(name)
 
     sql = 'DELETE FROM tasks WHERE name="{}"'.format(name)
     g_conn.cursor().execute(sql)
@@ -126,11 +126,11 @@ if __name__ == '__main__':
     init(True)
     sep = '\n\t\t\t'
     verbose(1, 'info tasks:', str(g_pragmas.tasks))
-    add_task(name='task1', schedule='daily')
+    create_task(name='task1', schedule='daily')
     verbose(1, 'all tasks:', '\t' + list_tasks(sep))
-    add_task(name='task2', schedule='continuous')
+    create_task(name='task2', schedule='continuous')
     verbose(1, 'all tasks:', '\t' + list_tasks(sep))
     update_task(name='task2', state='running')
-    verbose(1, 'got task', repr(get_task('task2')))
+    verbose(1, 'got task', repr(read_task('task2')))
     delete_task(name='task1')
     verbose(1, 'all tasks:', '\t' + list_tasks(sep))

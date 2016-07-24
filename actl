@@ -4,8 +4,8 @@ autolite control tool.
 
 Usage:
     actl task list [-v | -vv]
-    actl task (get | delete) <name> [-v | -vv]
-    actl task (add | update) <name> [--schedule=<schedule>] [--state=<state>] [-v | -vv]
+    actl task (read | delete) <name> [-v | -vv]
+    actl task (create | update) <name> [--schedule=<schedule>] [--state=<state>] [-v | -vv]
     actl reset [-v | -vv]
 
 Arguments:
@@ -50,16 +50,16 @@ def task(arguments):
     if arguments['list']:
         task_list()
 
-    elif arguments['add']:
-        db.add_task(**_task_add_update_kwargs(arguments))
+    elif arguments['create']:
+        db.create_task(**_task_add_update_kwargs(arguments))
 
     elif arguments['update']:
         db.update_task(**_task_add_update_kwargs(arguments))
 
-    elif arguments['get'] or arguments['delete']:
+    elif arguments['read'] or arguments['delete']:
         try:
-            if arguments['get']:
-                print(repr(db.get_task(name=arguments['<name>'])))
+            if arguments['read']:
+                print(repr(db.read_task(name=arguments['<name>'])))
 
             else:
                 db.delete_task(name=arguments['<name>'])
