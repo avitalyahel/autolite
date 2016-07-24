@@ -7,7 +7,7 @@ from verbosity import verbose, set_verbosity
 
 
 g_conn = None
-g_pragmas = AttrDict()  # {tname: TableColumns()}
+g_table_info = AttrDict()  # {tname: TableColumns()}
 
 
 class TableColumns(object):
@@ -61,16 +61,16 @@ def init(drop=False):
 
 
 def load_pragma(tname):
-    if tname not in g_pragmas:
+    if tname not in g_table_info:
         cols = g_conn.cursor().execute('PRAGMA table_info("{}")'.format(tname)).fetchall()
         if cols:
-            g_pragmas[tname] = TableColumns(*cols)
+            g_table_info[tname] = TableColumns(*cols)
             verbose(1, 'loaded pragma:', tname)
 
         else:
             return None
 
-    return g_pragmas[tname]
+    return g_table_info[tname]
 
 
 def _drop_create_table(tname):
@@ -102,7 +102,7 @@ def read_task(name):
     if not values:
         raise NameError('missing task: ' + name)
 
-    task = TABLE_SCHEMAS.tasks.new(**dict(zip(g_pragmas.tasks.cols, values)))
+    task = TABLE_SCHEMAS.tasks.new(**dict(zip(g_table_info.tasks.cols, values)))
     verbose(1, 'got task', repr(task))
     return task
 
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     set_verbosity(1)
     init(True)
     sep = '\n\t\t\t'
-    verbose(1, 'info tasks:', str(g_pragmas.tasks))
+    verbose(1, 'info tasks:', str(g_table_info.tasks))
     create_task(name='task1', schedule='daily')
     verbose(1, 'all tasks:', '\t' + list_tasks(sep))
     create_task(name='task2', schedule='continuous')

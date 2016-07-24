@@ -79,8 +79,8 @@ def _task_create_kwargs(arguments):
 
 
 def task_list():
-    db.g_pragmas.tasks.sep = '\t'
-    print(str(db.g_pragmas.tasks).title())
+    db.g_table_info.tasks.sep = '\t'
+    print(str(db.g_table_info.tasks).title())
     print(db.list_tasks(colsep='\t'))
 
 
