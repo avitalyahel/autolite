@@ -5,7 +5,7 @@ autolite control tool.
 Usage:
     actl task list [-v | -vv]
     actl task (read | delete) <name> [-v | -vv]
-    actl task (create | update) <name> [--schedule=<schedule>] [--state=<state>] [-v | -vv]
+    actl task create <name> (--continuous | --daily) [-v | -vv]
     actl reset [-v | -vv]
 
 Arguments:
@@ -15,8 +15,8 @@ Options:
     -h --help               Show this screen.
     --version               Show version.
     -v --verbose            Higher verbosity messages.
-    --schedule <schedule>   Run schedule [default: daily].
-    --state <state>         Task state [default: pending].
+    -C, --continuous        Set task schedule to 'continuous'.
+    -D, --daily             Set task schedule to 'daily'.
 '''
 
 import os
@@ -38,7 +38,7 @@ def actl(arguments):
         task(arguments)
 
     elif arguments['reset']:
-        if input('Confirm Db reset [N/y]: ') == 'y':
+        if input('Confirm Db reset (N|y): ') == 'y':
             db.init(drop=True)
             print('Db have been reset!')
 
@@ -51,17 +51,14 @@ def task(arguments):
         task_list()
 
     elif arguments['create']:
-        db.create_task(**_task_add_update_kwargs(arguments))
+        db.create_task(**_task_create_kwargs(arguments))
 
-    elif arguments['update']:
-        db.update_task(**_task_add_update_kwargs(arguments))
-
-    elif arguments['read'] or arguments['delete']:
+    else:
         try:
             if arguments['read']:
                 print(repr(db.read_task(name=arguments['<name>'])))
 
-            else:
+            elif arguments['delete']:
                 db.delete_task(name=arguments['<name>'])
 
         except NameError as exc:
@@ -69,9 +66,15 @@ def task(arguments):
             sys.exit(1)
 
 
-def _task_add_update_kwargs(arguments):
-    result = dict(name=arguments['<name>'])
-    result.update(dict((arg, arguments['--{}'.format(arg)]) for arg in ['schedule', 'state']))
+def _task_create_kwargs(arguments):
+    result = dict(name=arguments['<name>'], state='pending')
+
+    if arguments['--daily']:
+        result.update(dict(schedule='daily'))
+
+    elif arguments['--continuous']:
+        result.update(dict(schedule='continuous'))
+
     return result
 
 
