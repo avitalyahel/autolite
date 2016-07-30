@@ -39,7 +39,7 @@ def connect():
     global g_conn
     if g_conn is None:
         g_conn = sqlite3.connect(DB_NAME)
-        verbose(1, 'connected to', DB_NAME)
+        verbose(2, 'connected to', DB_NAME)
 
 
 def disconnect():
@@ -47,7 +47,7 @@ def disconnect():
     if g_conn is not None:
         g_conn.commit()
         g_conn.close()
-        verbose(1, 'closed connection to:', DB_NAME)
+        verbose(2, 'closed connection to:', DB_NAME)
         g_conn = None
 
 
@@ -65,7 +65,7 @@ def load_table_info(tname):
         cols = g_conn.cursor().execute('PRAGMA table_info("{}")'.format(tname)).fetchall()
         if cols:
             g_table_info[tname] = TableColumns(*cols)
-            verbose(1, 'loaded info of table:', tname)
+            verbose(2, 'loaded info of table:', tname)
 
         else:
             return None

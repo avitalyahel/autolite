@@ -23,7 +23,7 @@ import os
 import sys
 
 import db
-from verbosity import set_verbosity
+from verbosity import set_verbosity, get_verbosity_level
 
 SELF_ABS_PATH = os.path.realpath(__file__)
 SELF_FULL_DIR = os.path.dirname(SELF_ABS_PATH)
@@ -63,7 +63,7 @@ def task(arguments):
                 db.delete_task(name=arguments['<name>'])
 
         except NameError as exc:
-            print(PACKAGE_NAME, 'Error:', exc)
+            print(PACKAGE_NAME, 'Error!', exc)
             sys.exit(1)
 
 
@@ -90,10 +90,9 @@ if __name__ == '__main__':
     with open(os.path.join(SELF_FULL_DIR, 'version')) as ver_file:
         arguments = docopt(__doc__, version=ver_file.read())
 
-    if arguments['--verbose']:
-        set_verbosity(arguments['--verbose'])
+    set_verbosity(arguments['--verbose'])
 
-    if arguments['--verbose'] > 1:
+    if get_verbosity_level() > 1:
         print(arguments)
 
     sys.exit(actl(arguments))
