@@ -25,8 +25,9 @@ import sys
 import db
 from verbosity import set_verbosity
 
-SELF_ABS_PATH = os.path.abspath(__file__)
-SELF_SUB_DIR = os.path.basename(os.path.dirname(SELF_ABS_PATH))
+SELF_ABS_PATH = os.path.realpath(__file__)
+SELF_FULL_DIR = os.path.dirname(SELF_ABS_PATH)
+SELF_SUB_DIR = os.path.basename(SELF_FULL_DIR)
 
 PACKAGE_NAME = SELF_SUB_DIR
 
@@ -86,7 +87,8 @@ def task_list():
 
 if __name__ == '__main__':
     from docopt import docopt
-    arguments = docopt(__doc__, version=open('version').read())
+    with open(os.path.join(SELF_FULL_DIR, 'version')) as ver_file:
+        arguments = docopt(__doc__, version=ver_file.read())
 
     if arguments['--verbose']:
         set_verbosity(arguments['--verbose'])
