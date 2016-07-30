@@ -55,17 +55,17 @@ def init(drop=False):
     connect()
 
     for tname in ['tasks']:
-        if drop or not load_pragma(tname):
+        if drop or not load_table_info(tname):
             _drop_create_table(tname)
-            load_pragma(tname)
+            load_table_info(tname)
 
 
-def load_pragma(tname):
+def load_table_info(tname):
     if tname not in g_table_info:
         cols = g_conn.cursor().execute('PRAGMA table_info("{}")'.format(tname)).fetchall()
         if cols:
             g_table_info[tname] = TableColumns(*cols)
-            verbose(1, 'loaded pragma:', tname)
+            verbose(1, 'loaded info of table:', tname)
 
         else:
             return None
