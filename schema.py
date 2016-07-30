@@ -43,7 +43,10 @@ TABLE_SCHEMAS = AttrDict(
     tasks=TableSchema(
         name='TEXT',
         schedule='TEXT',
-        last='TEXT',
         state='TEXT',
+        setup='TEXT',
+        command='TEXT',
+        teardown='TEXT',
+        last='TEXT',
     ),
 )
