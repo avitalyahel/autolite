@@ -5,7 +5,10 @@ autolite control tool.
 Usage:
     actl task list [-v | -vv]
     actl task (read | delete) <name> [-v | -vv]
-    actl task create <name> (--continuous | --daily) [-v | -vv]
+    actl task create <name> (--continuous | --daily)
+                     [--command=<cmd>] [--setup=<setup>] [--teardown=<teardown>] [-v | -vv]
+    actl task set <name> schedule (--continuous | --daily) [-v | -vv]
+    actl task set <name> (setup | command | teardown) <exe> [-v | -vv]
     actl reset [-v | -vv]
 
 Arguments:
@@ -17,6 +20,9 @@ Options:
     -v --verbose            Higher verbosity messages.
     -C, --continuous        Set task schedule to 'continuous'.
     -D, --daily             Set task schedule to 'daily'.
+    --command <cmd>         Task executable command.
+    --setup <setup>         Task executable setup (returns bool).
+    --teardown <teardown>   Task executable teardown.
 '''
 
 import os
@@ -59,6 +65,9 @@ def task(arguments):
             if arguments['read']:
                 print(repr(db.read_task(name=arguments['<name>'])))
 
+            elif arguments['set']:
+                task_set(arguments)
+
             elif arguments['delete']:
                 db.delete_task(name=arguments['<name>'])
 
@@ -68,21 +77,46 @@ def task(arguments):
 
 
 def _task_create_kwargs(arguments):
-    result = dict(name=arguments['<name>'], state='pending')
+    result = dict(
+        name=arguments['<name>'],
+        state='pending',
+        setup=arguments['--setup'],
+        command=arguments['--command'],
+        teardown=arguments['--teardown'],
+    )
 
-    if arguments['--daily']:
-        result.update(dict(schedule='daily'))
-
-    elif arguments['--continuous']:
-        result.update(dict(schedule='continuous'))
+    result.update(_task_sched_kwargs(arguments))
 
     return result
+
+
+def _task_sched_kwargs(arguments):
+    if arguments['--daily']:
+        return dict(schedule='daily')
+
+    elif arguments['--continuous']:
+        return dict(schedule='continuous')
+
+    else:
+        return dict()
 
 
 def task_list():
     db.g_table_info.tasks.sep = '\t'
     print(str(db.g_table_info.tasks).title())
     print(db.list_tasks(colsep='\t'))
+
+
+def task_set(arguments):
+    kwargs = dict(
+        (field, arguments['<exe>'])
+        for field in ['setup', 'command', 'teardown']
+        if arguments[field]
+    )
+
+    kwargs.update(name=arguments['<name>'], **_task_sched_kwargs(arguments))
+
+    db.update_task(**kwargs)
 
 
 if __name__ == '__main__':
