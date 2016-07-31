@@ -29,11 +29,10 @@ import os
 import sys
 
 import db
+import consts
 from verbosity import set_verbosity, get_verbosity_level
 
-SELF_ABS_PATH = os.path.realpath(__file__)
-SELF_FULL_DIR = os.path.dirname(SELF_ABS_PATH)
-SELF_SUB_DIR = os.path.basename(SELF_FULL_DIR)
+SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
 
 PACKAGE_NAME = SELF_SUB_DIR
 
