@@ -89,6 +89,8 @@ def create_task(**kwargs):
 
 
 def update_task(**kwargs):
+    read_task(name=kwargs['name'])
+
     task = TABLE_SCHEMAS.tasks.new(**kwargs)
     sql = 'UPDATE tasks SET {} WHERE name="{}"'.format(task.for_update(), kwargs['name'])
     g_conn.cursor().execute(sql)
@@ -123,7 +125,7 @@ def list_tasks(rowsep='\n', colsep='|'):
 
 if __name__ == '__main__':
     set_verbosity(1)
-    init(True)
+    init(drop=True)
     sep = '\n\t\t\t'
     verbose(1, 'info tasks:', str(g_table_info.tasks))
     create_task(name='task1', schedule='daily')
