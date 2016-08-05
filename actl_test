@@ -56,7 +56,10 @@ class ActlTest(object):
 
         with io.StringIO() as buf, redirect_stdout(buf):
             actl.actl(docopt.docopt(actl.__doc__))
-            return buf.getvalue()
+            result = buf.getvalue()
+
+        verbose(3, ' '.join(sys.argv), '->\n', '\r' + result[:-1])
+        return result
 
     @property
     def taskName(self):
