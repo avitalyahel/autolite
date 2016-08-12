@@ -103,7 +103,7 @@ def _task_sched_kwargs(arguments):
 
 
 def task_list():
-    tasks = (row.split('|') for row in db.list_tasks().split('\n'))
+    tasks = (row.split('|') for row in db.list_tasks())
     taskiter1, taskiter2 = itertools.tee(tasks)
     widths = _measure_cols(taskiter1)
 

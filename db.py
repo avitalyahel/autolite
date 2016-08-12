@@ -118,9 +118,9 @@ def delete_task(name):
     verbose(1, 'deleted task:', name)
 
 
-def list_tasks(rowsep='\n', colsep='|'):
+def list_tasks(colsep='|'):
     sql = 'SELECT * FROM tasks'
-    return rowsep.join(colsep.join(row) for row in g_conn.cursor().execute(sql).fetchall())
+    return (colsep.join(row) for row in g_conn.cursor().execute(sql).fetchall())
 
 
 if __name__ == '__main__':
@@ -129,10 +129,10 @@ if __name__ == '__main__':
     sep = '\n\t\t\t'
     verbose(1, 'info tasks:', str(g_table_info.tasks))
     create_task(name='task1', schedule='daily')
-    verbose(1, 'all tasks:', '\t' + list_tasks(sep))
+    verbose(1, 'all tasks:', '\t' + sep.join(list_tasks()))
     create_task(name='task2', schedule='continuous')
-    verbose(1, 'all tasks:', '\t' + list_tasks(sep))
+    verbose(1, 'all tasks:', '\t' + sep.join(list_tasks()))
     update_task(name='task2', state='running')
     verbose(1, 'got task', repr(read_task('task2')))
     delete_task(name='task1')
-    verbose(1, 'all tasks:', '\t' + list_tasks(sep))
+    verbose(1, 'all tasks:', '\t' + sep.join(list_tasks()))
