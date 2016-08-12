@@ -17,7 +17,7 @@ class TableColumns(object):
         self._cols = args
 
     def __repr__(self):
-        return self._sep.join(self.cols)
+        return self._sep.join(self.names)
 
     @property
     def sep(self):
@@ -28,7 +28,7 @@ class TableColumns(object):
         self._sep = value
 
     @property
-    def cols(self):
+    def names(self):
         return self._extract(1)
 
     def _extract(self, index):
@@ -104,7 +104,7 @@ def read_task(name):
     if not values:
         raise NameError('missing task: ' + name)
 
-    task = TABLE_SCHEMAS.tasks.new(**dict(zip(g_table_info.tasks.cols, values)))
+    task = TABLE_SCHEMAS.tasks.new(**dict(zip(g_table_info.tasks.names, values)))
     verbose(1, 'got task', repr(task))
     return task
 
