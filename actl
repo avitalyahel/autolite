@@ -27,9 +27,11 @@ Options:
 
 import os
 import sys
+import itertools
 
 import db
 import consts
+from common import fmtprint
 from verbosity import set_verbosity, get_verbosity_level
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
@@ -101,9 +103,32 @@ def _task_sched_kwargs(arguments):
 
 
 def task_list():
-    db.g_table_info.tasks.sep = '\t'
-    print(str(db.g_table_info.tasks).title())
-    print(db.list_tasks(colsep='\t'))
+    tasks = (row.split('|') for row in db.list_tasks().split('\n'))
+    taskiter1, taskiter2 = itertools.tee(tasks)
+    widths = _measure_cols(taskiter1)
+
+    titles = str(db.g_table_info.tasks).upper().split('|')
+    widths = max(widths, _measure_cols([titles]))
+    formats = [str('{:%d}' % width) for width in widths]
+
+    fmtprint(titles, formats, sep='  ')
+
+    for _task in taskiter2:
+        fmtprint(_task, formats, sep='  ')
+
+
+def _measure_cols(rows):
+    widths = []
+
+    for row in rows:
+        for i, field in enumerate(row):
+            try:
+                widths[i] = max(widths[i], len(field))
+
+            except IndexError:
+                widths.insert(i, len(field))
+
+    return widths
 
 
 def task_set(arguments):

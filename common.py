@@ -1,3 +1,4 @@
+import itertools
 import subprocess
 
 
@@ -14,3 +15,9 @@ def system_out(cmd):
     return subprocess.run(
         cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
     ).stdout
+
+
+def fmtprint(values, formats=[], sep=' '):
+    for val, fmt in itertools.zip_longest(values, formats, fillvalue='{}'):
+        print(fmt.format(val), end=sep)
+    print()
