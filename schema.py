@@ -50,3 +50,5 @@ TABLE_SCHEMAS = AttrDict(
         last='TEXT',
     ),
 )
+
+SCHEDULES = ['daily', 'continuous', 'never']

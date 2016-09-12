@@ -82,8 +82,9 @@ class TestTaskCRUD(ActlTest, unittest.TestCase):
         self.actl('task create', self.taskName, '--daily')
         self.assertEqual(self.read_task(self.taskName).schedule, 'daily')
 
-        self.actl('task set', self.taskName, 'schedule --continuous')
-        self.assertEqual(self.read_task(self.taskName).schedule, 'continuous')
+        for sched in ['continuous', 'daily', 'never']:
+            self.actl('task set', self.taskName, 'schedule --{}'.format(sched))
+            self.assertEqual(self.read_task(self.taskName).schedule, sched)
 
         self.actl('task set', self.taskName, 'command ls')
         self.assertEqual(self.read_task(self.taskName).command, 'ls')

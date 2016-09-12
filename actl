@@ -1,13 +1,16 @@
 #!/usr/local/bin/python3
-'''
+
+import schema
+
+__doc__ = '''
 autolite control tool.
 
 Usage:
     actl task list [-v | -vv]
     actl task (read | delete) <name> [-v | -vv]
-    actl task create <name> (--continuous | --daily)
-                     [--command=<cmd>] [--setup=<setup>] [--teardown=<teardown>] [-v | -vv]
-    actl task set <name> schedule (--continuous | --daily) [-v | -vv]
+    actl task create <name> ({sched_flags})
+                     [--command=<exe>] [--setup=<exe>] [--teardown=<exe>] [-v | -vv]
+    actl task set <name> schedule ({sched_flags}) [-v | -vv]
     actl task set <name> (setup | command | teardown) <exe> [-v | -vv]
     actl reset [-v | -vv]
 
@@ -18,12 +21,16 @@ Options:
     -h --help               Show this screen.
     --version               Show version.
     -v --verbose            Higher verbosity messages.
-    -C, --continuous        Set task schedule to 'continuous'.
-    -D, --daily             Set task schedule to 'daily'.
-    --command <cmd>         Task executable command.
-    --setup <setup>         Task executable setup (returns bool).
-    --teardown <teardown>   Task executable teardown.
-'''
+{sched_opts}
+    --command <exe>         Task executable command.
+    --setup <exe>           Task executable setup (returns bool).
+    --teardown <exe>        Task executable teardown.
+'''.format(
+    sched_flags=' | '.join(('--' + sched) for sched in schema.SCHEDULES),
+    sched_opts='\n'.join(
+        '    -{upchar}, --{sched:17} Set task schedule to \'{sched}\'.'.format(sched=sched, upchar=sched[0].upper())
+        for sched in schema.SCHEDULES),
+)
 
 import os
 import sys
@@ -92,14 +99,11 @@ def _task_create_kwargs(arguments):
 
 
 def _task_sched_kwargs(arguments):
-    if arguments['--daily']:
-        return dict(schedule='daily')
+    for sched in schema.SCHEDULES:
+        if arguments['--' + sched]:
+            return dict(schedule=sched)
 
-    elif arguments['--continuous']:
-        return dict(schedule='continuous')
-
-    else:
-        return dict()
+    return dict()
 
 
 def task_list():
