@@ -2,7 +2,7 @@ import sqlite3
 
 from consts import DB_NAME
 from common import AttrDict
-from schema import TABLE_SCHEMAS
+from schema import TABLE_SCHEMAS, TableSchema
 from verbosity import verbose, set_verbosity
 
 
@@ -107,13 +107,13 @@ def update_task(**kwargs):
     verbose(1, 'updated task', repr(task))
 
 
-def read_task(name):
+def read_task(name) -> TableSchema:
     sql = 'SELECT * FROM tasks WHERE name="{}"'.format(name)
     values = g_conn.cursor().execute(sql).fetchone()
     if not values:
         raise NameError('missing task: ' + name)
 
-    task = TABLE_SCHEMAS.tasks.new(**dict(zip(g_table_info.tasks.names, values)))
+    task = _new_task(values)
     verbose(1, 'got task', repr(task))
     return task
 
@@ -127,9 +127,23 @@ def delete_task(name):
     verbose(1, 'deleted task:', name)
 
 
-def list_tasks(colsep='|'):
+def list_tasks(**where):
+    return (_new_task(row) for row in task_rows(**where))
+
+
+def task_rows(sep='', **where):
     sql = 'SELECT * FROM tasks'
-    return (colsep.join(row) for row in g_conn.cursor().execute(sql).fetchall())
+
+    if where:
+        sql += ' WHERE ' + TABLE_SCHEMAS.tasks.new(**where).for_where()
+
+    verbose(3, sql)
+    return iter(sep.join(row) if sep else row
+                for row in g_conn.cursor().execute(sql).fetchall())
+
+
+def _new_task(values) -> TableSchema:
+    return TABLE_SCHEMAS.tasks.new(**dict(zip(g_table_info.tasks.names, values)))
 
 
 if __name__ == '__main__':
@@ -138,10 +152,11 @@ if __name__ == '__main__':
     sep = '\n\t\t\t'
     verbose(1, 'info tasks:', str(g_table_info.tasks))
     create_task(name='task1', schedule='daily')
-    verbose(1, 'all tasks:', '\t' + sep.join(list_tasks()))
+    verbose(1, 'all tasks:', '\t' + sep.join(task_rows(sep='|')))
     create_task(name='task2', schedule='continuous')
-    verbose(1, 'all tasks:', '\t' + sep.join(list_tasks()))
+    verbose(1, 'all tasks:', '\t' + sep.join(task_rows(sep='|')))
     update_task(name='task2', state='running')
     verbose(1, 'got task', repr(read_task('task2')))
+    verbose(1, 'task list:\n', '\n'.join(repr(task) for task in list_tasks()))
     delete_task(name='task1')
-    verbose(1, 'all tasks:', '\t' + sep.join(list_tasks()))
+    verbose(1, 'all tasks:', '\t' + sep.join(task_rows(sep='|')))

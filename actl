@@ -112,12 +112,9 @@ def _task_sched_kwargs(arguments):
 
 
 def task_list():
-    tasks = (row.split('|') for row in db.list_tasks())
-    taskiter1, taskiter2 = itertools.tee(tasks)
-    widths = _measure_cols(taskiter1)
-
     titles = str(db.g_table_info.tasks).upper().split('|')
-    widths = max(widths, _measure_cols([titles]))
+    taskiter1, taskiter2 = itertools.tee(db.task_rows())
+    widths = (max(w1, w2) for w1, w2 in zip(_measure_cols(taskiter1), _measure_cols([titles])))
     formats = [str('{:%d}' % width) for width in widths]
 
     fmtprint(titles, formats, sep='  ')
