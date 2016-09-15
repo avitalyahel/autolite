@@ -98,7 +98,7 @@ def create_task(**kwargs):
 
 
 def update_task(**kwargs):
-    read_task(name=kwargs['name'])
+    _assert_existing_task(kwargs['name'])
 
     task = TABLE_SCHEMAS.tasks.new(**kwargs)
     sql = 'UPDATE tasks SET {} WHERE name="{}"'.format(task.for_update(), kwargs['name'])
@@ -110,6 +110,7 @@ def update_task(**kwargs):
 def read_task(name) -> TableSchema:
     sql = 'SELECT * FROM tasks WHERE name="{}"'.format(name)
     values = g_conn.cursor().execute(sql).fetchone()
+
     if not values:
         raise NameError('missing task: ' + name)
 
@@ -118,8 +119,19 @@ def read_task(name) -> TableSchema:
     return task
 
 
+def existing_task(name) -> bool:
+    sql = 'SELECT 1 FROM tasks WHERE name="{}" LIMIT 1'.format(name)
+    values = g_conn.cursor().execute(sql).fetchone()
+    return values is not None and len(values) > 0
+
+
+def _assert_existing_task(name):
+    if not existing_task(name=name):
+        raise NameError('missing task: ' + name)
+
+
 def delete_task(name):
-    read_task(name)
+    _assert_existing_task(name)
 
     sql = 'DELETE FROM tasks WHERE name="{}"'.format(name)
     g_conn.cursor().execute(sql)
@@ -152,6 +164,8 @@ if __name__ == '__main__':
     sep = '\n\t\t\t'
     verbose(1, 'info tasks:', str(g_table_info.tasks))
     create_task(name='task1', schedule='daily')
+    assert existing_task(name='task1')
+    verbose(1, 'existing task1')
     verbose(1, 'all tasks:', '\t' + sep.join(task_rows(sep='|')))
     create_task(name='task2', schedule='continuous')
     verbose(1, 'all tasks:', '\t' + sep.join(task_rows(sep='|')))
@@ -159,4 +173,6 @@ if __name__ == '__main__':
     verbose(1, 'got task', repr(read_task('task2')))
     verbose(1, 'task list:\n', '\n'.join(repr(task) for task in list_tasks()))
     delete_task(name='task1')
+    assert not existing_task(name='task1')
+    verbose(1, 'not existing task1')
     verbose(1, 'all tasks:', '\t' + sep.join(task_rows(sep='|')))
