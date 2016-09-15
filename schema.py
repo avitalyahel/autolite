@@ -21,6 +21,9 @@ class TableSchema(AttrDict):
     def for_update(self):
         return ','.join('='.join([k, _quoted(v)]) for k, v in self.items() if v)
 
+    def for_where(self):
+        return ' AND '.join('{}={}'.format(k, _quoted(v)) for k, v in self.items() if v)
+
 
 def _quoted(val):
     return '"{}"'.format(val) if isinstance(val, str) else _empty(val)

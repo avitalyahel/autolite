@@ -1,6 +1,7 @@
-from contextlib import contextmanager
+import sys
 
 from datetime import datetime
+from contextlib import contextmanager
 
 
 g_verbosity_level = 0
@@ -19,7 +20,7 @@ def get_verbosity_level() -> int:
 def verbose(level: int, *args):
     if g_verbosity_level >= level:
         if g_verbosity_level > 1:
-            print(datetime.now(), *args)
+            print(datetime.now(), '<' + sys.argv[0] + '>', *args)
 
         else:
             print(*args)
