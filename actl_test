@@ -3,7 +3,7 @@
 autolite control tool unit test.
 
 Usage:
-    actl_test [<filter>] [-v | -vv | -vvv]
+    actl_test [<filter>] [--list] [-v | -vv | -vvv]
 
 Arguments:
     <filter>        RegEx pattern to match test case names.
@@ -11,6 +11,7 @@ Arguments:
 Options:
     -h --help       Show this screen.
     -v --verbose    Higher verbosity messages.
+    -l --list       List name of test cases.
 '''
 
 import re
@@ -207,6 +208,20 @@ def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:
     return unittest.TestSuite(loadedTests(case) for case in testCases)
 
 
+class TestLister(object):
+
+    def __init__(self, stream=None, verbosity=0):
+        self._stream = stream if stream else sys.stderr
+        self._verbosity = verbosity
+
+    def run(self, suite: unittest.TestSuite):
+        i = 0
+        for case in suite:
+            for test in case._tests:
+                i += 1
+                print(i, repr(test))
+
+
 ALL_TEST_CASES = (
     TestTaskCRUD,
     TestTaskState,
@@ -218,7 +233,8 @@ if __name__ == '__main__':
     arguments = docopt.docopt(__doc__)
     set_verbosity(arguments['--verbose'])
 
-    runner = unittest.TextTestRunner(verbosity=get_verbosity_level())
+    runner_factory = TestLister if arguments['--list'] else unittest.TextTestRunner
+    runner = runner_factory(stream=sys.stdout, verbosity=get_verbosity_level())
 
     if arguments['<filter>'] is None:
         runner.run(suite(ALL_TEST_CASES))
