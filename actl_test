@@ -48,8 +48,20 @@ class ActlTest(object):
     def tearDownClass(cls):
         db.fini()
         import shutil
-        shutil.rmtree(cls._tmpDir)
-        verbose(2, 'removed tmp dir:', cls._tmpDir)
+
+        try:
+            shutil.rmtree(cls._tmpDir)
+            verbose(2, 'removed tmp dir:', cls._tmpDir)
+
+        except PermissionError as exc:
+            if sys.platform == 'win32':
+                verbose(2, 'raised:', exc)
+                assert not os.listdir(cls._tmpDir), 'unexpected dir content'
+                verbose(2, cls._tmpDir, 'is emtpy')
+
+            else:
+                raise exc
+
         del cls._tmpDir
         os.chdir(cls._cwd)
 
