@@ -54,15 +54,24 @@ def disconnect():
 def init(drop=False):
     connect()
 
-    for tname in ['tasks']:
+    for tname in TABLE_SCHEMAS.keys():
         if drop or not load_table_info(tname):
             _drop_create_table(tname)
             load_table_info(tname)
 
 
+def fini():
+    for tname in TABLE_SCHEMAS.keys():
+        if tname in g_table_info:
+            del g_table_info[tname]
+
+    disconnect()
+
+
 def load_table_info(tname):
     if tname not in g_table_info:
         cols = g_conn.cursor().execute('PRAGMA table_info("{}")'.format(tname)).fetchall()
+
         if cols:
             g_table_info[tname] = TableColumns(*cols)
             verbose(2, 'loaded info of table:', tname)

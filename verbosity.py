@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from datetime import datetime
 
 
@@ -21,3 +23,13 @@ def verbose(level: int, *args):
 
         else:
             print(*args)
+
+
+@contextmanager
+def verbosity_context(level: int):
+    original = get_verbosity_level()
+    set_verbosity(level)
+
+    yield
+
+    set_verbosity(original)

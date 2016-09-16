@@ -24,7 +24,7 @@ import docopt
 
 import db
 from common import AttrDict
-from verbosity import verbose, set_verbosity, get_verbosity_level
+from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_context
 
 
 actl = imp.load_source('actl', './actl')
@@ -43,7 +43,7 @@ class ActlTest(object):
 
     @classmethod
     def tearDownClass(cls):
-        db.disconnect()
+        db.fini()
         import shutil
         shutil.rmtree(cls._tmpDir)
         verbose(2, 'removed tmp dir:', cls._tmpDir)
@@ -65,27 +65,28 @@ class ActlTest(object):
         verbose(3, ' '.join(sys.argv), '->\n', '\r' + result[:-1])
         return result
 
-    @property
-    def taskName(self):
-        return 'task-name'
-
-    def read_task(self, name: str) -> AttrDict:
-        return AttrDict(yaml.load(self.actl('task read ' + name).replace(', ', '\n')))
-
-
-class TestTaskCRUD(ActlTest, unittest.TestCase):
-
     def setUp(self):
         self._taskName = 't1'
+        self.actl('task create', self.taskName, '--daily')
+        self.assertEqual(self.read_task(self.taskName).schedule, 'daily')
 
     @property
     def taskName(self):
         return self._taskName
 
-    def test_task_crud_positive(self):
-        self.actl('task create', self.taskName, '--daily')
-        self.assertEqual(self.read_task(self.taskName).schedule, 'daily')
+    def read_task(self, name: str) -> AttrDict:
+        return AttrDict(yaml.load(self.actl('task read ' + name).replace(', ', '\n')))
 
+    def tearDown(self):
+        self.actl('task delete', self.taskName)
+
+        with self.assertRaises(SystemExit):
+            self.read_task(self.taskName)
+
+
+class TestTaskCRUD(ActlTest, unittest.TestCase):
+
+    def test_task_crud_positive(self):
         for sched in ['continuous', 'daily', 'never']:
             self.actl('task set', self.taskName, 'schedule --{}'.format(sched))
             self.assertEqual(self.read_task(self.taskName).schedule, sched)
@@ -113,11 +114,33 @@ class TestTaskCRUD(ActlTest, unittest.TestCase):
             with self.assertRaises(SystemExit):
                 self.actl('task set missing', exe, 'x')
 
-    def tearDown(self):
-        self.actl('task delete', self.taskName)
+
+class TestTaskState(ActlTest, unittest.TestCase):
+
+    def test_task_state_update(self):
+        for state in ['running', 'pending']:
+            db.update_task(name=self.taskName, state=state)
+            self.assertEqual(self.read_task(self.taskName).state, state)
+
+    def test_task_reset_positive(self):
+        db.update_task(name=self.taskName, state='failed')
+        self.assertEqual(self.read_task(self.taskName).state, 'failed')
+
+        self.actl('task reset', self.taskName)
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
+
+        with verbosity_context(level=1):
+            self.assertIn('already pending.', self.actl('task reset', self.taskName))
+
+    def test_task_reset_negative(self):
+        db.update_task(name=self.taskName, state='running')
+        self.assertEqual(self.read_task(self.taskName).state, 'running')
 
         with self.assertRaises(SystemExit):
-            self.read_task(self.taskName)
+            self.actl('task reset', self.taskName)
+
+        self.actl('task reset --force', self.taskName)
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
 
 def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:
@@ -127,6 +150,7 @@ def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:
 
 ALL_TEST_CASES = (
     TestTaskCRUD,
+    TestTaskState,
 )
 
 

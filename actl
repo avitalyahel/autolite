@@ -12,6 +12,7 @@ Usage:
                      [--command=<exe>] [--setup=<exe>] [--teardown=<exe>] [-v | -vv]
     actl task set <name> schedule ({sched_flags}) [-v | -vv]
     actl task set <name> (setup | command | teardown) <exe> [-v | -vv]
+    actl task reset <name> [-v | -vv] [--force]
     actl reset [-v | -vv]
 
 Arguments:
@@ -21,6 +22,7 @@ Options:
     -h --help               Show this screen.
     --version               Show version.
     -v --verbose            Higher verbosity messages.
+    --force                 Force the command.
 {sched_opts}
     --command <exe>         Task executable command.
     --setup <exe>           Task executable setup (returns bool).
@@ -39,7 +41,7 @@ import itertools
 import db
 import consts
 from common import fmtprint
-from verbosity import set_verbosity, get_verbosity_level
+from verbosity import set_verbosity, get_verbosity_level, verbose
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
 
@@ -78,6 +80,9 @@ def task(arguments):
 
             elif arguments['delete']:
                 db.delete_task(name=arguments['<name>'])
+
+            elif arguments['reset']:
+                task_reset(arguments)
 
         except NameError as exc:
             print(PACKAGE_NAME, 'Error!', exc)
@@ -147,8 +152,23 @@ def task_set(arguments):
     db.update_task(**kwargs)
 
 
+def task_reset(arguments):
+    task = db.read_task(name=arguments['<name>'])
+
+    if task.state == 'pending':
+        verbose(1, 'task', task.name, 'already pending.')
+        return
+
+    if not arguments['--force'] and task.state != 'failed':
+        print(PACKAGE_NAME, 'Error! Task', task.name, 'must be failed before reset.')
+        sys.exit(1)
+
+    db.update_task(name=task.name, state='pending')
+
+
 if __name__ == '__main__':
     from docopt import docopt
+
     with open(os.path.join(SELF_FULL_DIR, 'version')) as ver_file:
         arguments = docopt(__doc__, version=ver_file.read())
 
