@@ -3,13 +3,17 @@
 autolite control tool unit test.
 
 Usage:
-    actl_test [-v | -vv | -vvv]
+    actl_test [<filter>] [-v | -vv | -vvv]
+
+Arguments:
+    <filter>        RegEx pattern to match test case names.
 
 Options:
-    -h --help               Show this screen.
-    -v --verbose            Higher verbosity messages.
+    -h --help       Show this screen.
+    -v --verbose    Higher verbosity messages.
 '''
 
+import re
 import os
 import sys
 import imp
@@ -131,4 +135,17 @@ if __name__ == '__main__':
     set_verbosity(arguments['--verbose'])
 
     runner = unittest.TextTestRunner(verbosity=get_verbosity_level())
-    runner.run(suite(ALL_TEST_CASES))
+
+    if arguments['<filter>'] is None:
+        runner.run(suite(ALL_TEST_CASES))
+
+    else:
+        matched_cases = [test_case for test_case in ALL_TEST_CASES
+                         if re.match(arguments['<filter>'], test_case.__name__)]
+
+        if matched_cases:
+            verbose(1, 'matched cases:', [t.__name__ for t in matched_cases])
+            runner.run(suite(matched_cases))
+
+        else:
+            verbose(0, 'Warning! no test cases matched for:', arguments['<filter>'])
