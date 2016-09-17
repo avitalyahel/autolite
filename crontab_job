@@ -1,0 +1,74 @@
+#!/usr/local/bin/python3
+'''
+autolite crontab job.
+
+Usage:
+    crontab_job [--timeout=<sec>] [--interval=<sec>] [-v | -vv | -vvv]
+
+Options:
+    -h --help               Show this screen.
+    --version               Show version.
+    -v --verbose            Higher verbosity messages.
+    -t --timeout <sec>      Task timeout in seconds [default: 0].
+    -i --interval <sec>     Poll interval in seconds [default: 0.25].
+'''
+import os
+import sys
+from time import sleep
+
+import db
+import consts
+import task_procs
+from verbosity import set_verbosity, verbose, get_verbosity_level
+
+SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
+
+
+def main(arguments):
+    db.init(drop=False)
+
+    timeout = float(arguments['--timeout'])
+
+    try:
+        interval = float(arguments['--interval'])
+
+        while True:
+            for task in db.list_tasks(state='pending'):
+                if db.is_ready(task):
+                    task_procs.start(task)
+
+                else:
+                    verbose(2, task.name, 'is not ready.')
+
+            running = task_procs.serve(timeout)
+
+            if not running:
+                verbose(0, 'no running tasks, breaking.')
+                break
+
+            else:
+                verbose(2, running, 'running tasks, sleeping', interval, 'secs...')
+
+            sleep(interval)
+
+    except Exception as exc:
+        if arguments['--verbose'] > 2:
+            raise
+
+        else:
+            print('Error!', str(exc))
+            sys.exit(1)
+
+
+if __name__ == '__main__':
+    from docopt import docopt
+
+    with open(os.path.join(SELF_FULL_DIR, 'version')) as ver_file:
+        arguments = docopt(__doc__, version=ver_file.read())
+
+    set_verbosity(arguments['--verbose'])
+
+    if get_verbosity_level() > 1:
+        print(arguments)
+
+    sys.exit(main(arguments))

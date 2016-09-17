@@ -1,14 +1,18 @@
 #!/usr/local/bin/python3
-'''
+
+import schema
+
+__doc__ = '''
 autolite control tool.
 
 Usage:
     actl task list [-v | -vv]
     actl task (read | delete) <name> [-v | -vv]
-    actl task create <name> (--continuous | --daily)
-                     [--command=<cmd>] [--setup=<setup>] [--teardown=<teardown>] [-v | -vv]
-    actl task set <name> schedule (--continuous | --daily) [-v | -vv]
+    actl task create <name> ({sched_flags})
+                     [--command=<exe>] [--setup=<exe>] [--teardown=<exe>] [-v | -vv]
+    actl task set <name> schedule ({sched_flags}) [-v | -vv]
     actl task set <name> (setup | command | teardown) <exe> [-v | -vv]
+    actl task reset <name> [-v | -vv] [--force]
     actl reset [-v | -vv]
 
 Arguments:
@@ -18,12 +22,17 @@ Options:
     -h --help               Show this screen.
     --version               Show version.
     -v --verbose            Higher verbosity messages.
-    -C, --continuous        Set task schedule to 'continuous'.
-    -D, --daily             Set task schedule to 'daily'.
-    --command <cmd>         Task executable command.
-    --setup <setup>         Task executable setup (returns bool).
-    --teardown <teardown>   Task executable teardown.
-'''
+    --force                 Force the command.
+{sched_opts}
+    --command <exe>         Task executable command.
+    --setup <exe>           Task executable setup (returns bool).
+    --teardown <exe>        Task executable teardown.
+'''.format(
+    sched_flags=' | '.join(('--' + sched) for sched in schema.SCHEDULES),
+    sched_opts='\n'.join(
+        '    -{upchar}, --{sched:17} Set task schedule to \'{sched}\'.'.format(sched=sched, upchar=sched[0].upper())
+        for sched in schema.SCHEDULES),
+)
 
 import os
 import sys
@@ -32,7 +41,7 @@ import itertools
 import db
 import consts
 from common import fmtprint
-from verbosity import set_verbosity, get_verbosity_level
+from verbosity import set_verbosity, get_verbosity_level, verbose
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
 
@@ -72,6 +81,9 @@ def task(arguments):
             elif arguments['delete']:
                 db.delete_task(name=arguments['<name>'])
 
+            elif arguments['reset']:
+                task_reset(arguments)
+
         except NameError as exc:
             print(PACKAGE_NAME, 'Error!', exc)
             sys.exit(1)
@@ -92,23 +104,17 @@ def _task_create_kwargs(arguments):
 
 
 def _task_sched_kwargs(arguments):
-    if arguments['--daily']:
-        return dict(schedule='daily')
+    for sched in schema.SCHEDULES:
+        if arguments['--' + sched]:
+            return dict(schedule=sched)
 
-    elif arguments['--continuous']:
-        return dict(schedule='continuous')
-
-    else:
-        return dict()
+    return dict()
 
 
 def task_list():
-    tasks = (row.split('|') for row in db.list_tasks())
-    taskiter1, taskiter2 = itertools.tee(tasks)
-    widths = _measure_cols(taskiter1)
-
     titles = str(db.g_table_info.tasks).upper().split('|')
-    widths = max(widths, _measure_cols([titles]))
+    taskiter1, taskiter2 = itertools.tee(db.task_rows())
+    widths = (max(w1, w2) for w1, w2 in zip(_measure_cols(taskiter1), _measure_cols([titles])))
     formats = [str('{:%d}' % width) for width in widths]
 
     fmtprint(titles, formats, sep='  ')
@@ -143,8 +149,23 @@ def task_set(arguments):
     db.update_task(**kwargs)
 
 
+def task_reset(arguments):
+    task = db.read_task(name=arguments['<name>'])
+
+    if task.state == 'pending':
+        verbose(1, 'task', task.name, 'already pending.')
+        return
+
+    if not arguments['--force'] and task.state != 'failed':
+        print(PACKAGE_NAME, 'Error! Task', task.name, 'must be failed before reset.')
+        sys.exit(1)
+
+    db.update_task(name=task.name, state='pending')
+
+
 if __name__ == '__main__':
     from docopt import docopt
+
     with open(os.path.join(SELF_FULL_DIR, 'version')) as ver_file:
         arguments = docopt(__doc__, version=ver_file.read())
 

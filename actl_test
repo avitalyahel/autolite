@@ -3,27 +3,34 @@
 autolite control tool unit test.
 
 Usage:
-    actl_test [-v | -vv | -vvv]
+    actl_test [<filter>] [--list] [-v | -vv | -vvv]
+
+Arguments:
+    <filter>        RegEx pattern to match test case names.
 
 Options:
-    -h --help               Show this screen.
-    -v --verbose            Higher verbosity messages.
+    -h --help       Show this screen.
+    -v --verbose    Higher verbosity messages.
+    -l --list       List name of test cases.
 '''
 
+import re
 import os
 import sys
 import imp
 import yaml
 import unittest
+from contextlib import contextmanager
 
 import docopt
 
 import db
 from common import AttrDict
-from verbosity import verbose, set_verbosity, get_verbosity_level
+from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_context
 
 
 actl = imp.load_source('actl', './actl')
+crontab_job = imp.load_source('crontab_job', './crontab_job')
 
 
 class ActlTest(object):
@@ -39,15 +46,28 @@ class ActlTest(object):
 
     @classmethod
     def tearDownClass(cls):
-        db.disconnect()
+        db.fini()
         import shutil
-        shutil.rmtree(cls._tmpDir)
-        verbose(2, 'removed tmp dir:', cls._tmpDir)
+
+        try:
+            shutil.rmtree(cls._tmpDir)
+            verbose(2, 'removed tmp dir:', cls._tmpDir)
+
+        except PermissionError as exc:
+            if sys.platform == 'win32':
+                verbose(2, 'raised:', exc)
+                assert not os.listdir(cls._tmpDir), 'unexpected dir content'
+                verbose(2, cls._tmpDir, 'is emtpy')
+
+            else:
+                raise exc
+
         del cls._tmpDir
         os.chdir(cls._cwd)
 
-    def actl(self, *cli) -> str:
-        sys.argv = ['actl']
+    @contextmanager
+    def redirected_stdout_context(self, progname: str, *cli):
+        sys.argv = [progname]
         for c in cli:
             sys.argv += c.split(' ')
 
@@ -55,35 +75,49 @@ class ActlTest(object):
         from contextlib import redirect_stdout
 
         with io.StringIO() as buf, redirect_stdout(buf):
+            yield buf
+
+    def actl(self, *cli) -> str:
+        with self.redirected_stdout_context('actl', *cli) as buf:
             actl.actl(docopt.docopt(actl.__doc__))
             result = buf.getvalue()
 
-        verbose(3, ' '.join(sys.argv), '->\n', '\r' + result[:-1])
+        verbose(3, 'actl', ' '.join(cli), '->\n', '\r' + result[:-1])
         return result
 
-    @property
-    def taskName(self):
-        return 'task-name'
+    def crontab_job(self, *cli) -> str:
+        with self.redirected_stdout_context('crontab_job', *cli) as buf:
+            crontab_job.main(docopt.docopt(crontab_job.__doc__))
+            result = buf.getvalue()
 
-    def read_task(self, name: str) -> AttrDict:
-        return AttrDict(yaml.load(self.actl('task read ' + name).replace(', ', '\n')))
-
-
-class TestTaskCRUD(ActlTest, unittest.TestCase):
+        verbose(3, 'crontab_job', ' '.join(cli), '->\n', '\r' + result[:-1])
+        return result
 
     def setUp(self):
         self._taskName = 't1'
+        self.actl('task create', self.taskName, '--daily')
+        self.assertEqual(self.read_task(self.taskName).schedule, 'daily')
 
     @property
     def taskName(self):
         return self._taskName
 
-    def test_task_crud_positive(self):
-        self.actl('task create', self.taskName, '--daily')
-        self.assertEqual(self.read_task(self.taskName).schedule, 'daily')
+    def read_task(self, name: str) -> AttrDict:
+        return AttrDict(yaml.load(self.actl('task read ' + name).replace(', ', '\n')))
 
-        self.actl('task set', self.taskName, 'schedule --continuous')
-        self.assertEqual(self.read_task(self.taskName).schedule, 'continuous')
+    def tearDown(self):
+        self.actl('task delete', self.taskName)
+
+        with self.assertRaises(SystemExit):
+            self.read_task(self.taskName)
+
+
+class TestTaskCRUD(ActlTest, unittest.TestCase):
+
+    def test_task_crud_positive(self):
+        for sched in ['continuous', 'daily', 'never']:
+            self.actl('task set', self.taskName, 'schedule --{}'.format(sched))
+            self.assertEqual(self.read_task(self.taskName).schedule, sched)
 
         self.actl('task set', self.taskName, 'command ls')
         self.assertEqual(self.read_task(self.taskName).command, 'ls')
@@ -108,11 +142,77 @@ class TestTaskCRUD(ActlTest, unittest.TestCase):
             with self.assertRaises(SystemExit):
                 self.actl('task set missing', exe, 'x')
 
-    def tearDown(self):
-        self.actl('task delete', self.taskName)
+
+class TestTaskState(ActlTest, unittest.TestCase):
+
+    def test_task_state_update(self):
+        for state in ['running', 'pending']:
+            db.update_task(name=self.taskName, state=state)
+            self.assertEqual(self.read_task(self.taskName).state, state)
+
+    def test_task_reset_positive(self):
+        db.update_task(name=self.taskName, state='failed')
+        self.assertEqual(self.read_task(self.taskName).state, 'failed')
+
+        self.actl('task reset', self.taskName)
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
+
+        with verbosity_context(level=1):
+            self.assertIn('already pending.', self.actl('task reset', self.taskName))
+
+    def test_task_reset_negative(self):
+        db.update_task(name=self.taskName, state='running')
+        self.assertEqual(self.read_task(self.taskName).state, 'running')
 
         with self.assertRaises(SystemExit):
-            self.read_task(self.taskName)
+            self.actl('task reset', self.taskName)
+
+        self.actl('task reset --force', self.taskName)
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
+
+
+class TestCronJob(ActlTest, unittest.TestCase):
+
+    def setUp(self):
+        super(TestCronJob, self).setUp()
+        self.actl('task set', self.taskName, 'schedule --continuous')
+        self._v = '-{}'.format('v' * max(get_verbosity_level(), 1))
+
+    def test_cron_job_positive(self):
+        self.crontab_job(self._v)
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
+
+        self.crontab_job(self._v, '--timeout 60')
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
+
+        self.crontab_job(self._v, '--interval 0.5')
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
+
+        self.actl('task set', self.taskName, 'schedule --daily')
+        db.update_task(name=self.taskName, last='0')
+        self.crontab_job(self._v)
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
+
+        self.actl('task set', self.taskName, 'schedule --continuous')
+        self.assertEqual(self.read_task(self.taskName).schedule, 'continuous')
+
+    def test_cron_job_failure(self):
+        self.actl('task set', self.taskName, 'command false')
+        self.crontab_job(self._v)
+        self.assertEqual(self.read_task(self.taskName).state, 'failed')
+
+        self.actl('task reset', self.taskName)
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
+
+    def test_cron_job_timeout(self):
+        db.update_task(name=self.taskName, command='sleep 0.5')
+        self.assertEqual(self.read_task(self.taskName).command, 'sleep 0.5')
+
+        self.crontab_job(self._v, '--timeout 0.1')
+        self.assertEqual(self.read_task(self.taskName).state, 'failed')
+
+        self.actl('task reset', self.taskName)
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
 
 def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:
@@ -120,8 +220,24 @@ def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:
     return unittest.TestSuite(loadedTests(case) for case in testCases)
 
 
+class TestLister(object):
+
+    def __init__(self, stream=None, verbosity=0):
+        self._stream = stream if stream else sys.stderr
+        self._verbosity = verbosity
+
+    def run(self, suite: unittest.TestSuite):
+        i = 0
+        for case in suite:
+            for test in case._tests:
+                i += 1
+                print(i, repr(test))
+
+
 ALL_TEST_CASES = (
     TestTaskCRUD,
+    TestTaskState,
+    TestCronJob,
 )
 
 
@@ -129,5 +245,19 @@ if __name__ == '__main__':
     arguments = docopt.docopt(__doc__)
     set_verbosity(arguments['--verbose'])
 
-    runner = unittest.TextTestRunner(verbosity=get_verbosity_level())
-    runner.run(suite(ALL_TEST_CASES))
+    runner_factory = TestLister if arguments['--list'] else unittest.TextTestRunner
+    runner = runner_factory(stream=sys.stdout, verbosity=get_verbosity_level())
+
+    if arguments['<filter>'] is None:
+        runner.run(suite(ALL_TEST_CASES))
+
+    else:
+        matched_cases = [test_case for test_case in ALL_TEST_CASES
+                         if re.match(arguments['<filter>'], test_case.__name__)]
+
+        if matched_cases:
+            verbose(1, 'matched cases:', [t.__name__ for t in matched_cases])
+            runner.run(suite(matched_cases))
+
+        else:
+            verbose(0, 'Warning! no test cases matched for:', arguments['<filter>'])
