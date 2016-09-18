@@ -19,6 +19,7 @@ from time import sleep
 import db
 import consts
 import task_procs
+from task import Task
 from verbosity import set_verbosity, verbose, get_verbosity_level
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
@@ -33,8 +34,8 @@ def main(arguments):
         interval = float(arguments['--interval'])
 
         while True:
-            for task in db.list_tasks(state='pending'):
-                if db.is_ready(task):
+            for task in Task.list(state='pending'):
+                if task.ready:
                     task_procs.start(task)
 
                 else:
