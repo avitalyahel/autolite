@@ -1,5 +1,8 @@
+import io
+import sys
 import itertools
 import subprocess
+from contextlib import contextmanager, redirect_stdout
 
 
 class AttrDict(dict):
@@ -15,6 +18,16 @@ def system_out(cmd):
     return subprocess.run(
         cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
     ).stdout
+
+
+@contextmanager
+def redirected_stdout_context(*cli) -> io.StringIO:
+    sys.argv = []
+    for c in cli:
+        sys.argv += c.split(' ')
+
+    with io.StringIO() as buf, redirect_stdout(buf):
+        yield buf
 
 
 def fmtprint(values, formats=[], sep=' '):

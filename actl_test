@@ -21,12 +21,11 @@ import sys
 import imp
 import yaml
 import unittest
-from contextlib import contextmanager
 
 import docopt
 
 import db
-from common import AttrDict
+from common import AttrDict, redirected_stdout_context
 from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_context
 
 
@@ -66,20 +65,8 @@ class ActlTest(object):
         del cls._tmpDir
         os.chdir(cls._cwd)
 
-    @contextmanager
-    def redirected_stdout_context(self, progname: str, *cli):
-        sys.argv = [progname]
-        for c in cli:
-            sys.argv += c.split(' ')
-
-        import io
-        from contextlib import redirect_stdout
-
-        with io.StringIO() as buf, redirect_stdout(buf):
-            yield buf
-
     def actl(self, *cli) -> str:
-        with self.redirected_stdout_context('actl', *cli) as buf:
+        with redirected_stdout_context('actl', *cli) as buf:
             actl.actl(docopt.docopt(actl.__doc__))
             result = buf.getvalue()
 
@@ -87,7 +74,7 @@ class ActlTest(object):
         return result
 
     def crontab_job(self, *cli) -> str:
-        with self.redirected_stdout_context('crontab_job', *cli) as buf:
+        with redirected_stdout_context('crontab_job', *cli) as buf:
             crontab_job.main(docopt.docopt(crontab_job.__doc__))
             result = buf.getvalue()
 
