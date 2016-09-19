@@ -3,7 +3,7 @@
 autolite control tool unit test.
 
 Usage:
-    actl_test [<filter>] [--list] [-v | -vv | -vvv]
+    actl_test [<filter>] [--list] [--resume] [-v | -vv | -vvv]
 
 Arguments:
     <filter>        RegEx pattern to match test case names.
@@ -12,6 +12,7 @@ Options:
     -h --help       Show this screen.
     -v --verbose    Higher verbosity messages.
     -l --list       List name of test cases.
+    --resume        Resume next on failure.
 '''
 
 import re
@@ -103,7 +104,8 @@ class ActlTest(object):
         return self._taskName
 
     def read_task(self, name: str) -> AttrDict:
-        return AttrDict(yaml.load(self.actl('task read ' + name).replace(', ', '\n')))
+        task_str = self.actl('task read ' + name)
+        return AttrDict(yaml.load(task_str.replace(', ', '\n')))
 
     def tearDown(self):
         self.actl('task delete', self.taskName)
@@ -222,9 +224,8 @@ def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:
 
 class TestLister(object):
 
-    def __init__(self, stream=None, verbosity=0):
-        self._stream = stream if stream else sys.stderr
-        self._verbosity = verbosity
+    def __init__(self, **kwargs):
+        pass
 
     def run(self, suite: unittest.TestSuite):
         i = 0
@@ -246,7 +247,11 @@ if __name__ == '__main__':
     set_verbosity(arguments['--verbose'])
 
     runner_factory = TestLister if arguments['--list'] else unittest.TextTestRunner
-    runner = runner_factory(stream=sys.stdout, verbosity=get_verbosity_level())
+    runner = runner_factory(
+        stream=sys.stdout,
+        verbosity=get_verbosity_level(),
+        failfast=not arguments['--resume'],
+    )
 
     if arguments['<filter>'] is None:
         runner.run(suite(ALL_TEST_CASES))

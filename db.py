@@ -1,13 +1,10 @@
 import sqlite3
-from datetime import datetime
 
 from consts import DB_NAME
 from common import AttrDict
 from schema import TABLE_SCHEMAS, TableSchema
 from verbosity import verbose, set_verbosity
 
-
-DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 g_conn = None
 g_table_info = AttrDict()  # {tname: TableColumns()}
@@ -97,7 +94,8 @@ def create_task(**kwargs):
     sql = 'INSERT INTO tasks ({}) VALUES ({})'.format(*task.for_insert())
     g_conn.cursor().execute(sql)
     g_conn.commit()
-    verbose(1, 'added task', repr(task))
+    verbose(1, 'created task', repr(task))
+    return task
 
 
 def update_task(**kwargs):
@@ -159,15 +157,6 @@ def task_rows(sep='', **where):
 
 def _new_task(values) -> TableSchema:
     return TABLE_SCHEMAS.tasks.new(**dict(zip(g_table_info.tasks.names, values)))
-
-
-def is_ready(task: TableSchema) -> bool:
-    return task.schedule == 'continuous' or task.schedule == 'daily' and str(datetime.now().date()) > task.last
-
-
-def is_timed_out(task: TableSchema, timeout: int) -> bool:
-    tasl_last_dt = datetime.strptime(task.last, DATETIME_FORMAT)
-    return (datetime.now() - tasl_last_dt).total_seconds() > timeout
 
 
 if __name__ == '__main__':
