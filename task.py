@@ -18,7 +18,7 @@ class Task():
 
         arg = args[0]
         if isinstance(arg, str):
-            self._db_task = db.read_task(name=arg)
+            self._db_task = db.read('tasks', name=arg)
 
         elif isinstance(arg, schema.TableSchema):
             self._db_task = arg
@@ -34,11 +34,11 @@ class Task():
 
     @classmethod
     def create(cls, **kwargs) -> object:
-        return cls(db.create_task(**kwargs))
+        return cls(db.create('tasks', **kwargs))
 
     @classmethod
     def list(cls, **kwargs) -> tuple:
-        return (cls(db_task) for db_task in db.list_tasks(**kwargs))
+        return (cls(db_task) for db_task in db.list_table('tasks', **kwargs))
 
     @property
     def continuous(self) -> bool:
@@ -71,16 +71,16 @@ class Task():
     def start(self):
         self._db_task.state = 'running'
         self._db_task.last = datetime.now()
-        db.update_task(name=self.name, state=self._db_task.state, last=self._db_task.last)
+        db.update('tasks', name=self.name, state=self._db_task.state, last=self._db_task.last)
 
     def fail(self):
         self._db_task.state = 'failed'
-        db.update_task(name=self.name, state=self._db_task.state)
+        db.update('tasks', name=self.name, state=self._db_task.state)
 
     def reset(self):
         self._db_task.state = 'pending'
-        db.update_task(name=self.name, state=self._db_task.state)
+        db.update('tasks', name=self.name, state=self._db_task.state)
 
     def delete(self):
-        db.delete_task(name=self.name)
+        db.delete('tasks', name=self.name)
         self._db_task = None

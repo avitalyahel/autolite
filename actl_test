@@ -149,11 +149,11 @@ class TestTaskState(ActlTest, unittest.TestCase):
 
     def test_task_state_update(self):
         for state in ['running', 'pending']:
-            db.update_task(name=self.taskName, state=state)
+            db.update('tasks', name=self.taskName, state=state)
             self.assertEqual(self.read_task(self.taskName).state, state)
 
     def test_task_reset_positive(self):
-        db.update_task(name=self.taskName, state='failed')
+        db.update('tasks', name=self.taskName, state='failed')
         self.assertEqual(self.read_task(self.taskName).state, 'failed')
 
         self.actl('task reset', self.taskName)
@@ -163,7 +163,7 @@ class TestTaskState(ActlTest, unittest.TestCase):
             self.assertIn('already pending.', self.actl('task reset', self.taskName))
 
     def test_task_reset_negative(self):
-        db.update_task(name=self.taskName, state='running')
+        db.update('tasks', name=self.taskName, state='running')
         self.assertEqual(self.read_task(self.taskName).state, 'running')
 
         with self.assertRaises(SystemExit):
@@ -191,7 +191,7 @@ class TestCronJob(ActlTest, unittest.TestCase):
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
         self.actl('task set', self.taskName, 'schedule --daily')
-        db.update_task(name=self.taskName, last='0')
+        db.update('tasks', name=self.taskName, last='0')
         self.crontab_job(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
@@ -207,7 +207,7 @@ class TestCronJob(ActlTest, unittest.TestCase):
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
     def test_cron_job_timeout(self):
-        db.update_task(name=self.taskName, command='sleep 0.5')
+        db.update('tasks', name=self.taskName, command='sleep 0.5')
         self.assertEqual(self.read_task(self.taskName).command, 'sleep 0.5')
 
         self.crontab_job(self._v, '--timeout 0.1')

@@ -147,7 +147,7 @@ def task_set(arguments):
 
     kwargs.update(name=arguments['<name>'], **_task_sched_kwargs(arguments))
 
-    db.update_task(**kwargs)
+    db.update('tasks', **kwargs)
 
 
 def task_reset(arguments):

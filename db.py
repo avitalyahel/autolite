@@ -89,91 +89,92 @@ def _drop_create_table(tname):
     verbose(2, 'initialized table:', tname)
 
 
-def create_task(**kwargs):
-    task = TABLE_SCHEMAS.tasks.new(**kwargs)
-    sql = 'INSERT INTO tasks ({}) VALUES ({})'.format(*task.for_insert())
+def create(table, **kwargs):
+    record = TABLE_SCHEMAS[table].new(**kwargs)
+    sql = 'INSERT INTO {} ({}) VALUES ({})'.format(table, *record.for_insert())
     g_conn.cursor().execute(sql)
     g_conn.commit()
-    verbose(1, 'created task', repr(task))
-    return task
+    verbose(1, 'created', table[:-1], repr(record))
+    return record
 
 
-def update_task(**kwargs):
-    _assert_existing_task(kwargs['name'])
+def update(table, **kwargs):
+    _assert_existing(table, kwargs['name'])
 
-    task = TABLE_SCHEMAS.tasks.new(**kwargs)
-    sql = 'UPDATE tasks SET {} WHERE name="{}"'.format(task.for_update(), kwargs['name'])
+    record = TABLE_SCHEMAS[table].new(**kwargs)
+    sql = 'UPDATE tasks SET {} WHERE name="{}"'.format(record.for_update(), kwargs['name'])
     g_conn.cursor().execute(sql)
     g_conn.commit()
-    verbose(2, 'updated task', repr(task))
+    verbose(2, 'updated', table[:-1], repr(record))
 
 
-def read_task(name) -> TableSchema:
-    sql = 'SELECT * FROM tasks WHERE name="{}"'.format(name)
+def read(table, name) -> TableSchema:
+    sql = 'SELECT * FROM {} WHERE name="{}"'.format(table, name)
     values = g_conn.cursor().execute(sql).fetchone()
 
     if not values:
-        raise NameError('missing task: ' + name)
+        raise NameError('missing {}: {}'.format(table, name))
 
-    task = _new_task(values)
-    verbose(1, 'got task', repr(task))
-    return task
+    record = _new(table, values)
+    verbose(1, 'read', table[:-1], repr(record))
+    return record
 
 
-def existing_task(name) -> bool:
-    sql = 'SELECT 1 FROM tasks WHERE name="{}" LIMIT 1'.format(name)
+def existing(table, name) -> bool:
+    sql = 'SELECT 1 FROM {} WHERE name="{}" LIMIT 1'.format(table, name)
     values = g_conn.cursor().execute(sql).fetchone()
     return values is not None and len(values) > 0
 
 
-def _assert_existing_task(name):
-    if not existing_task(name=name):
-        raise NameError('missing task: ' + name)
+def _assert_existing(table, name):
+    if not existing(table, name=name):
+        raise NameError('missing {}: {}'.format(table, name))
 
 
-def delete_task(name):
-    _assert_existing_task(name)
+def delete(table, name):
+    _assert_existing(table, name)
 
-    sql = 'DELETE FROM tasks WHERE name="{}"'.format(name)
+    sql = 'DELETE FROM {} WHERE name="{}"'.format(table, name)
     g_conn.cursor().execute(sql)
     g_conn.commit()
-    verbose(1, 'deleted task:', name)
+    verbose(1, 'deleted', table[:-1] + ':', name)
 
 
-def list_tasks(**where):
-    return (_new_task(row) for row in task_rows(**where))
+def list_table(table, **where):
+    return (_new(table, row) for row in rows(table, **where))
 
 
-def task_rows(sep='', **where):
-    sql = 'SELECT * FROM tasks'
+def rows(table, sep='', **where):
+    sql = 'SELECT * FROM ' + table
 
     if where:
-        sql += ' WHERE ' + TABLE_SCHEMAS.tasks.new(**where).for_where()
+        sql += ' WHERE ' + TABLE_SCHEMAS[table].new(**where).for_where()
 
     verbose(3, sql)
     return iter(sep.join(row) if sep else row
                 for row in g_conn.cursor().execute(sql).fetchall())
 
 
-def _new_task(values) -> TableSchema:
-    return TABLE_SCHEMAS.tasks.new(**dict(zip(g_table_info.tasks.names, values)))
+def _new(table, values) -> TableSchema:
+    return TABLE_SCHEMAS[table].new(**dict(zip(g_table_info[table].names, values)))
 
 
 if __name__ == '__main__':
     set_verbosity(1)
     init(drop=True)
     sep = '\n\t\t\t'
+    table = 'tasks'
     verbose(1, 'info tasks:', str(g_table_info.tasks))
-    create_task(name='task1', schedule='daily')
-    assert existing_task(name='task1')
+    create(table, name='task1', schedule='daily')
+    assert existing(table, name='task1')
     verbose(1, 'existing task1')
-    verbose(1, 'all tasks:', '\t' + sep.join(task_rows(sep='|')))
-    create_task(name='task2', schedule='continuous')
-    verbose(1, 'all tasks:', '\t' + sep.join(task_rows(sep='|')))
-    update_task(name='task2', state='running')
-    verbose(1, 'got task', repr(read_task('task2')))
-    verbose(1, 'task list:\n', '\n'.join(repr(task) for task in list_tasks()))
-    delete_task(name='task1')
-    assert not existing_task(name='task1')
+    verbose(1, 'all tasks:', '\t' + sep.join(rows('tasks', sep='|')))
+    create(table, name='task2', schedule='continuous')
+    verbose(1, 'all tasks:', '\t' + sep.join(rows('tasks', sep='|')))
+    update(table, name='task2', state='running')
+    verbose(1, 'got task', repr(read(table, 'task2')))
+    verbose(1, 'task list:\n', '\n'.join(repr(task) for task in list_table('tasks')))
+    delete(table, name='task1')
+    assert not existing(table, name='task1')
     verbose(1, 'not existing task1')
-    verbose(1, 'all tasks:', '\t' + sep.join(task_rows(sep='|')))
+    verbose(1, 'all tasks:', '\t' + sep.join(rows('tasks', sep='|')))
