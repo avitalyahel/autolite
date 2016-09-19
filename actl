@@ -40,6 +40,7 @@ import itertools
 
 import db
 import consts
+from task import Task
 from common import fmtprint
 from verbosity import set_verbosity, get_verbosity_level, verbose
 
@@ -68,18 +69,18 @@ def task(arguments):
         task_list()
 
     elif arguments['create']:
-        db.create_task(**_task_create_kwargs(arguments))
+        Task.create(**_task_create_kwargs(arguments))
 
     else:
         try:
             if arguments['read']:
-                print(repr(db.read_task(name=arguments['<name>'])))
+                print(Task(arguments['<name>']))
 
             elif arguments['set']:
                 task_set(arguments)
 
             elif arguments['delete']:
-                db.delete_task(name=arguments['<name>'])
+                Task(arguments['<name>']).delete()
 
             elif arguments['reset']:
                 task_reset(arguments)
@@ -150,17 +151,17 @@ def task_set(arguments):
 
 
 def task_reset(arguments):
-    task = db.read_task(name=arguments['<name>'])
+    task = Task(arguments['<name>'])
 
-    if task.state == 'pending':
+    if task.pending:
         verbose(1, 'task', task.name, 'already pending.')
         return
 
-    if not arguments['--force'] and task.state != 'failed':
+    if not arguments['--force'] and not task.failed:
         print(PACKAGE_NAME, 'Error! Task', task.name, 'must be failed before reset.')
         sys.exit(1)
 
-    db.update_task(name=task.name, state='pending')
+    task.reset()
 
 
 if __name__ == '__main__':
