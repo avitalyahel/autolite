@@ -52,6 +52,15 @@ TABLE_SCHEMAS = AttrDict(
         teardown='TEXT',
         last='TEXT',
     ),
+    systems=TableSchema(
+        name='TEXT',
+        ip='TEXT',
+        installer='TEXT',
+        cleaner='TEXT',
+        monitor='TEXT',
+        config='TEXT',
+        user='TEXT',
+    ),
 )
 
 SCHEDULES = ['daily', 'continuous', 'never']

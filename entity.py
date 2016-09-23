@@ -12,23 +12,14 @@ class MetaEntity(type):
 class Entity(metaclass=MetaEntity):
     _tableName = ''
 
-    def __init__(self, *args):
-        self._db_record = None
+    def __init__(self, name: str = '', schema: schema.TableSchema = None):
+        assert bool(name) ^ bool(schema), 'may init with name XOR schema'
 
-        if not args:
-            return
+        if name:
+            self._db_record = db.read(self._tableName, name=name)
 
-        assert len(args) == 1, 'may init with one arg only (passed: {})'.format(repr(args))
-        arg = args[0]
-
-        if isinstance(arg, str):
-            self._db_record = db.read(self._tableName, name=arg)
-
-        elif isinstance(arg, schema.TableSchema):
-            self._db_record = arg
-
-        else:
-            raise TypeError('unexpected arg type ' + str(type(arg)))
+        elif schema:
+            self._db_record = schema
 
     def __repr__(self):
         return repr(self._db_record)
@@ -38,8 +29,12 @@ class Entity(metaclass=MetaEntity):
 
     @classmethod
     def create(cls, **kwargs) -> object:
-        return cls(db.create(cls.tableName, **kwargs))
+        return cls(schema=db.create(cls.tableName, **kwargs))
 
     @classmethod
     def list(cls, **kwargs) -> tuple:
-        return (cls(db_task) for db_task in db.list_table(cls.tableName, **kwargs))
+        return (cls(schema=db_task) for db_task in db.list_table(cls.tableName, **kwargs))
+
+    @property
+    def tableName(self):
+        return type(self).tableName

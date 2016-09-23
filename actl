@@ -6,17 +6,20 @@ __doc__ = '''
 autolite control tool.
 
 Usage:
-    actl task list [-v | -vv]
-    actl task (read | delete) <name> [-v | -vv]
-    actl task create <name> ({sched_flags})
-                     [--command=<exe>] [--setup=<exe>] [--teardown=<exe>] [-v | -vv]
+    actl (task | system) list [-v | -vv]
+    actl task create <name> ({sched_flags}) [-v | -vv]
+                     [--command=<exe>] [--setup=<exe>] [--teardown=<exe>]
+    actl (task | system) (read | delete) <name> [-v | -vv]
     actl task set <name> schedule ({sched_flags}) [-v | -vv]
     actl task set <name> (setup | command | teardown) <exe> [-v | -vv]
     actl task reset <name> [-v | -vv] [--force]
+    actl system create <name> [--ip <ip>] [-v | -vv]
+                     [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
+    actl system set <name> ip <ip> [-v | -vv]
+    actl system set <name> (installer | cleaner | monitor | config) <exe> [-v | -vv]
+    actl system (acquire | install | clean | monitor | config) <name> [-v | -vv]
+    actl system release <name> [--force] [-v | -vv]
     actl reset [-v | -vv]
-
-Arguments:
-    <name>      Name of task.
 
 Options:
     -h --help               Show this screen.
@@ -24,9 +27,13 @@ Options:
     -v --verbose            Higher verbosity messages.
     --force                 Force the command.
 {sched_opts}
-    --command <exe>         Task executable command.
-    --setup <exe>           Task executable setup (returns bool).
-    --teardown <exe>        Task executable teardown.
+    --command <exe>         Task command executable.
+    --setup <exe>           Task setup executable (returns bool).
+    --teardown <exe>        Task teardown executable.
+    --installer <exe>       System installation executable.
+    --cleaner <exe>         System cleaning executable.
+    --monitor <exe>         System monitoring executable.
+    --config <exe>          System configuration executable.
 '''.format(
     sched_flags=' | '.join(('--' + sched) for sched in schema.SCHEDULES),
     sched_opts='\n'.join(
@@ -36,11 +43,11 @@ Options:
 
 import os
 import sys
-import itertools
 
 import db
 import consts
 import actl_task
+import actl_system
 from verbosity import set_verbosity, get_verbosity_level
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)

@@ -1,5 +1,6 @@
 import io
 import sys
+import getpass
 import itertools
 import subprocess
 from contextlib import contextmanager, redirect_stdout
@@ -59,3 +60,7 @@ def print_table(titles: iter, rows: iter):
 
     for _task in taskiter2:
         fmtprint(_task, formats, sep='  ')
+
+
+def active_user_name() -> str:
+    return getpass.getuser()
