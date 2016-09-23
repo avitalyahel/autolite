@@ -40,20 +40,20 @@ import itertools
 
 import db
 import consts
-from task import Task
-from common import fmtprint
-from verbosity import set_verbosity, get_verbosity_level, verbose
+import actl_task
+from verbosity import set_verbosity, get_verbosity_level
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
-
-PACKAGE_NAME = SELF_SUB_DIR
 
 
 def actl(arguments):
     db.init()
 
     if arguments['task']:
-        task(arguments)
+        actl_task.menu(arguments)
+
+    elif arguments['system']:
+        actl_system.menu(arguments)
 
     elif arguments['reset']:
         if input('Confirm Db reset (N|y): ') == 'y':
@@ -62,106 +62,6 @@ def actl(arguments):
 
         else:
             print('Did not reset.')
-
-
-def task(arguments):
-    if arguments['list']:
-        task_list()
-
-    elif arguments['create']:
-        Task.create(**_task_create_kwargs(arguments))
-
-    else:
-        try:
-            if arguments['read']:
-                print(Task(arguments['<name>']))
-
-            elif arguments['set']:
-                task_set(arguments)
-
-            elif arguments['delete']:
-                Task(arguments['<name>']).delete()
-
-            elif arguments['reset']:
-                task_reset(arguments)
-
-        except NameError as exc:
-            print(PACKAGE_NAME, 'Error!', exc)
-            sys.exit(1)
-
-
-def _task_create_kwargs(arguments):
-    result = dict(
-        name=arguments['<name>'],
-        state='pending',
-        setup=arguments['--setup'],
-        command=arguments['--command'],
-        teardown=arguments['--teardown'],
-    )
-
-    result.update(_task_sched_kwargs(arguments))
-
-    return result
-
-
-def _task_sched_kwargs(arguments):
-    for sched in schema.SCHEDULES:
-        if arguments['--' + sched]:
-            return dict(schedule=sched)
-
-    return dict()
-
-
-def task_list():
-    titles = str(db.g_table_info.tasks).upper().split('|')
-    taskiter1, taskiter2 = itertools.tee(db.task_rows())
-    widths = (max(w1, w2) for w1, w2 in zip(_measure_cols(taskiter1), _measure_cols([titles])))
-    formats = [str('{:%d}' % width) for width in widths]
-
-    fmtprint(titles, formats, sep='  ')
-
-    for _task in taskiter2:
-        fmtprint(_task, formats, sep='  ')
-
-
-def _measure_cols(rows):
-    widths = []
-
-    for row in rows:
-        for i, field in enumerate(row):
-            try:
-                widths[i] = max(widths[i], len(field))
-
-            except IndexError:
-                widths.insert(i, len(field))
-
-    return widths
-
-
-def task_set(arguments):
-    kwargs = dict(
-        (field, arguments['<exe>'])
-        for field in ['setup', 'command', 'teardown']
-        if arguments[field]
-    )
-
-    kwargs.update(name=arguments['<name>'], **_task_sched_kwargs(arguments))
-
-    db.update('tasks', **kwargs)
-
-
-def task_reset(arguments):
-    task = Task(arguments['<name>'])
-
-    if task.pending:
-        verbose(1, 'task', task.name, 'already pending.')
-        return
-
-    if not arguments['--force'] and not task.failed:
-        print(PACKAGE_NAME, 'Error! Task', task.name, 'must be failed before reset.')
-        sys.exit(1)
-
-    task.reset()
 
 
 if __name__ == '__main__':

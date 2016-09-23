@@ -121,7 +121,6 @@ class TestTaskCRUD(ActlTest, unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.read_task('missing')
 
-        self.actl('task create', self.taskName, '--daily')
         self.assertNotEqual(self.read_task(self.taskName).schedule, 'continuous')
 
         with self.assertRaises(SystemExit):

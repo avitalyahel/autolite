@@ -18,8 +18,8 @@ class TableSchema(AttrDict):
         cols, vals = zip(*[(k, _quoted(v)) for k, v in self.items()])
         return ','.join(cols), ','.join(vals)
 
-    def for_update(self):
-        return ','.join('='.join([k, _quoted(v)]) for k, v in self.items() if v)
+    def for_update(self, **kwargs):
+        return ','.join('='.join([k, _quoted(v)]) for k, v in self.items() if v or k in kwargs)
 
     def for_where(self):
         return ' AND '.join('{}={}'.format(k, _quoted(v)) for k, v in self.items() if v)
