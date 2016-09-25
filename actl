@@ -6,17 +6,20 @@ __doc__ = '''
 autolite control tool.
 
 Usage:
-    actl task list [-v | -vv]
-    actl task (read | delete) <name> [-v | -vv]
-    actl task create <name> ({sched_flags})
-                     [--command=<exe>] [--setup=<exe>] [--teardown=<exe>] [-v | -vv]
+    actl (task | system) list [-v | -vv]
+    actl task create <name> ({sched_flags}) [-v | -vv]
+                     [--command=<exe>] [--setup=<exe>] [--teardown=<exe>]
+    actl (task | system) (read | delete) <name> [-v | -vv]
     actl task set <name> schedule ({sched_flags}) [-v | -vv]
     actl task set <name> (setup | command | teardown) <exe> [-v | -vv]
     actl task reset <name> [-v | -vv] [--force]
+    actl system create <name> [--ip <ip>] [-v | -vv]
+                     [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
+    actl system set <name> ip <ip> [-v | -vv]
+    actl system set <name> (installer | cleaner | monitor | config) <exe> [-v | -vv]
+    actl system (acquire | install | clean | monitor | config) <name> [-v | -vv]
+    actl system release <name> [--force] [-v | -vv]
     actl reset [-v | -vv]
-
-Arguments:
-    <name>      Name of task.
 
 Options:
     -h --help               Show this screen.
@@ -24,9 +27,13 @@ Options:
     -v --verbose            Higher verbosity messages.
     --force                 Force the command.
 {sched_opts}
-    --command <exe>         Task executable command.
-    --setup <exe>           Task executable setup (returns bool).
-    --teardown <exe>        Task executable teardown.
+    --command <exe>         Task command executable.
+    --setup <exe>           Task setup executable (returns bool).
+    --teardown <exe>        Task teardown executable.
+    --installer <exe>       System installation executable.
+    --cleaner <exe>         System cleaning executable.
+    --monitor <exe>         System monitoring executable.
+    --config <exe>          System configuration executable.
 '''.format(
     sched_flags=' | '.join(('--' + sched) for sched in schema.SCHEDULES),
     sched_opts='\n'.join(
@@ -36,24 +43,24 @@ Options:
 
 import os
 import sys
-import itertools
 
 import db
 import consts
-from task import Task
-from common import fmtprint
-from verbosity import set_verbosity, get_verbosity_level, verbose
+import actl_task
+import actl_system
+from verbosity import set_verbosity, get_verbosity_level
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
-
-PACKAGE_NAME = SELF_SUB_DIR
 
 
 def actl(arguments):
     db.init()
 
     if arguments['task']:
-        task(arguments)
+        actl_task.menu(arguments)
+
+    elif arguments['system']:
+        actl_system.menu(arguments)
 
     elif arguments['reset']:
         if input('Confirm Db reset (N|y): ') == 'y':
@@ -62,106 +69,6 @@ def actl(arguments):
 
         else:
             print('Did not reset.')
-
-
-def task(arguments):
-    if arguments['list']:
-        task_list()
-
-    elif arguments['create']:
-        Task.create(**_task_create_kwargs(arguments))
-
-    else:
-        try:
-            if arguments['read']:
-                print(Task(arguments['<name>']))
-
-            elif arguments['set']:
-                task_set(arguments)
-
-            elif arguments['delete']:
-                Task(arguments['<name>']).delete()
-
-            elif arguments['reset']:
-                task_reset(arguments)
-
-        except NameError as exc:
-            print(PACKAGE_NAME, 'Error!', exc)
-            sys.exit(1)
-
-
-def _task_create_kwargs(arguments):
-    result = dict(
-        name=arguments['<name>'],
-        state='pending',
-        setup=arguments['--setup'],
-        command=arguments['--command'],
-        teardown=arguments['--teardown'],
-    )
-
-    result.update(_task_sched_kwargs(arguments))
-
-    return result
-
-
-def _task_sched_kwargs(arguments):
-    for sched in schema.SCHEDULES:
-        if arguments['--' + sched]:
-            return dict(schedule=sched)
-
-    return dict()
-
-
-def task_list():
-    titles = str(db.g_table_info.tasks).upper().split('|')
-    taskiter1, taskiter2 = itertools.tee(db.task_rows())
-    widths = (max(w1, w2) for w1, w2 in zip(_measure_cols(taskiter1), _measure_cols([titles])))
-    formats = [str('{:%d}' % width) for width in widths]
-
-    fmtprint(titles, formats, sep='  ')
-
-    for _task in taskiter2:
-        fmtprint(_task, formats, sep='  ')
-
-
-def _measure_cols(rows):
-    widths = []
-
-    for row in rows:
-        for i, field in enumerate(row):
-            try:
-                widths[i] = max(widths[i], len(field))
-
-            except IndexError:
-                widths.insert(i, len(field))
-
-    return widths
-
-
-def task_set(arguments):
-    kwargs = dict(
-        (field, arguments['<exe>'])
-        for field in ['setup', 'command', 'teardown']
-        if arguments[field]
-    )
-
-    kwargs.update(name=arguments['<name>'], **_task_sched_kwargs(arguments))
-
-    db.update_task(**kwargs)
-
-
-def task_reset(arguments):
-    task = Task(arguments['<name>'])
-
-    if task.pending:
-        verbose(1, 'task', task.name, 'already pending.')
-        return
-
-    if not arguments['--force'] and not task.failed:
-        print(PACKAGE_NAME, 'Error! Task', task.name, 'must be failed before reset.')
-        sys.exit(1)
-
-    task.reset()
 
 
 if __name__ == '__main__':
