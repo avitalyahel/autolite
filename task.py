@@ -33,9 +33,12 @@ class Task(Entity):
     def failed(self) -> bool:
         return self._db_record.state == 'failed'
 
+    @property
+    def last(self) -> datetime:
+        return datetime.strptime(self._db_record.last, DATETIME_FORMAT)
+
     def expired(self, timeout: int) -> bool:
-        task_last_dt = datetime.strptime(self.last, DATETIME_FORMAT)
-        return (datetime.now() - task_last_dt).total_seconds() > timeout
+        return (datetime.now() - self.last).total_seconds() > timeout
 
     def start(self):
         self._db_record.state = 'running'
