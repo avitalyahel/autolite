@@ -20,13 +20,13 @@ import os
 import sys
 import imp
 import yaml
+import getpass
 import unittest
-from contextlib import contextmanager
 
 import docopt
 
 import db
-from common import AttrDict
+from common import AttrDict, redirected_stdout_context
 from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_context
 
 
@@ -66,20 +66,8 @@ class ActlTest(object):
         del cls._tmpDir
         os.chdir(cls._cwd)
 
-    @contextmanager
-    def redirected_stdout_context(self, progname: str, *cli):
-        sys.argv = [progname]
-        for c in cli:
-            sys.argv += c.split(' ')
-
-        import io
-        from contextlib import redirect_stdout
-
-        with io.StringIO() as buf, redirect_stdout(buf):
-            yield buf
-
     def actl(self, *cli) -> str:
-        with self.redirected_stdout_context('actl', *cli) as buf:
+        with redirected_stdout_context('actl', *cli) as buf:
             actl.actl(docopt.docopt(actl.__doc__))
             result = buf.getvalue()
 
@@ -87,12 +75,15 @@ class ActlTest(object):
         return result
 
     def crontab_job(self, *cli) -> str:
-        with self.redirected_stdout_context('crontab_job', *cli) as buf:
+        with redirected_stdout_context('crontab_job', *cli) as buf:
             crontab_job.main(docopt.docopt(crontab_job.__doc__))
             result = buf.getvalue()
 
         verbose(3, 'crontab_job', ' '.join(cli), '->\n', '\r' + result[:-1])
         return result
+
+
+class ActlTestTask(ActlTest):
 
     def setUp(self):
         self._taskName = 't1'
@@ -114,7 +105,7 @@ class ActlTest(object):
             self.read_task(self.taskName)
 
 
-class TestTaskCRUD(ActlTest, unittest.TestCase):
+class TestTaskCRUD(ActlTestTask, unittest.TestCase):
 
     def test_task_crud_positive(self):
         for sched in ['continuous', 'daily', 'never']:
@@ -134,7 +125,6 @@ class TestTaskCRUD(ActlTest, unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.read_task('missing')
 
-        self.actl('task create', self.taskName, '--daily')
         self.assertNotEqual(self.read_task(self.taskName).schedule, 'continuous')
 
         with self.assertRaises(SystemExit):
@@ -145,15 +135,15 @@ class TestTaskCRUD(ActlTest, unittest.TestCase):
                 self.actl('task set missing', exe, 'x')
 
 
-class TestTaskState(ActlTest, unittest.TestCase):
+class TestTaskState(ActlTestTask, unittest.TestCase):
 
     def test_task_state_update(self):
         for state in ['running', 'pending']:
-            db.update_task(name=self.taskName, state=state)
+            db.update('tasks', name=self.taskName, state=state)
             self.assertEqual(self.read_task(self.taskName).state, state)
 
     def test_task_reset_positive(self):
-        db.update_task(name=self.taskName, state='failed')
+        db.update('tasks', name=self.taskName, state='failed')
         self.assertEqual(self.read_task(self.taskName).state, 'failed')
 
         self.actl('task reset', self.taskName)
@@ -163,7 +153,7 @@ class TestTaskState(ActlTest, unittest.TestCase):
             self.assertIn('already pending.', self.actl('task reset', self.taskName))
 
     def test_task_reset_negative(self):
-        db.update_task(name=self.taskName, state='running')
+        db.update('tasks', name=self.taskName, state='running')
         self.assertEqual(self.read_task(self.taskName).state, 'running')
 
         with self.assertRaises(SystemExit):
@@ -173,7 +163,81 @@ class TestTaskState(ActlTest, unittest.TestCase):
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
 
-class TestCronJob(ActlTest, unittest.TestCase):
+class ActlTestSystem(ActlTest):
+
+    def setUp(self):
+        self._systemName = 's1'
+        self.actl('system create', self.systemName)
+        self.read_system(name=self.systemName)
+
+    @property
+    def systemName(self):
+        return self._systemName
+
+    def read_system(self, name: str) -> AttrDict:
+        task_str = self.actl('system read ' + name)
+        return AttrDict(yaml.load(task_str.replace(', ', '\n')))
+
+    def tearDown(self):
+        self.actl('system delete', self.systemName)
+
+        with self.assertRaises(SystemExit):
+            self.read_system(self.systemName)
+
+
+class TestSystemCRUD(ActlTestSystem, unittest.TestCase):
+
+    def test_system_crud_positive(self):
+        for exe in 'installer | cleaner | monitor | config'.split(' | '):
+            self.actl('system set', self.systemName, exe, 'echo')
+            self.assertEqual(getattr(self.read_system(self.systemName), exe), 'echo')
+            self.actl('system', exe.replace('er', ''), self.systemName)
+
+        self.actl('system set', self.systemName, 'ip', 'localhost')
+        self.assertEqual(self.read_system(self.systemName).ip, 'localhost')
+
+    def test_system_crud_negative(self):
+        with self.assertRaises(SystemExit):
+            self.actl('system create', self.systemName)
+
+        with self.assertRaises(SystemExit):
+            self.read_system('missing')
+
+        with self.assertRaises(SystemExit):
+            self.actl('system set missing ip bla')
+
+        for exe in 'installer | cleaner | monitor | config'.split(' | '):
+            with self.assertRaises(SystemExit):
+                self.actl('system set missing', exe, 'x')
+
+
+class TestSystemState(ActlTestSystem, unittest.TestCase):
+
+    def test_system_state_positive(self):
+        self.actl('system acquire', self.systemName)
+        self.assertEqual(self.read_system(self.systemName).user, getpass.getuser())
+
+        self.assertIn('You have already acquired', self.actl('system acquire', self.systemName))
+
+        self.actl('system release', self.systemName)
+        self.assertEqual(db.read(table='systems', name=self.systemName).user, '')
+
+        self.assertIn('already free', self.actl('system release', self.systemName))
+
+    def test_system_state_negative(self):
+        db.update(table='systems', name=self.systemName, user='bla')
+
+        with self.assertRaises(SystemExit):
+            self.actl('system acquire', self.systemName)
+
+        with self.assertRaises(SystemExit):
+            self.actl('system release', self.systemName)
+
+        self.actl('system release --force', self.systemName)
+        self.assertEqual(db.read(table='systems', name=self.systemName).user, '')
+
+
+class TestCronJob(ActlTestTask, unittest.TestCase):
 
     def setUp(self):
         super(TestCronJob, self).setUp()
@@ -191,7 +255,7 @@ class TestCronJob(ActlTest, unittest.TestCase):
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
         self.actl('task set', self.taskName, 'schedule --daily')
-        db.update_task(name=self.taskName, last='0')
+        db.update('tasks', name=self.taskName, last='0')
         self.crontab_job(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
@@ -207,7 +271,7 @@ class TestCronJob(ActlTest, unittest.TestCase):
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
     def test_cron_job_timeout(self):
-        db.update_task(name=self.taskName, command='sleep 0.5')
+        db.update('tasks', name=self.taskName, command='sleep 0.5')
         self.assertEqual(self.read_task(self.taskName).command, 'sleep 0.5')
 
         self.crontab_job(self._v, '--timeout 0.1')
@@ -238,6 +302,8 @@ class TestLister(object):
 ALL_TEST_CASES = (
     TestTaskCRUD,
     TestTaskState,
+    TestSystemCRUD,
+    TestSystemState,
     TestCronJob,
 )
 
