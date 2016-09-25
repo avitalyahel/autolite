@@ -50,8 +50,8 @@ def _system_create_kwargs(arguments):
 
 
 def system_list():
-    titles = str(db.g_table_info.systems).upper().split('|')
-    print_table(titles, db.rows('systems'))
+    col_names = [name.upper() for name in db.g_table_columns.systems.names]
+    print_table(col_names, db.rows('systems'))
 
 
 def system_set(arguments):
