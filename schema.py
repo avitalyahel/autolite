@@ -1,3 +1,5 @@
+import itertools
+
 from common import AttrDict
 
 
@@ -8,6 +10,16 @@ class TableSchema(AttrDict):
 
     def __repr__(self):
         return ', '.join(': '.join([k, v]) for k, v in self.items() if v)
+
+    def items(self):
+        if 'name' in self:
+            return itertools.chain(
+                (('name', self.name), ),
+                ((k, v) for k, v in super(TableSchema, self).items() if k != 'name')
+            )
+
+        else:
+            return super(TableSchema, self).items()
 
     def new(self, **kwargs):
         result = TableSchema((k, PYTYPES[v]()) for k, v in self.items())
