@@ -1,13 +1,39 @@
 from datetime import datetime
+from contextlib import contextmanager
 
 import db
 from entity import Entity
+from verbosity import verbose
 
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 
 class Task(Entity):
     _tableName = 'tasks'
+
+    _walkParents = []
+
+    @classmethod
+    def walkIter(cls, **kwargs):    # yield task, level
+        for task in cls.list(**kwargs):
+            if task.name in cls._walkParents:
+                verbose(2, task.name, 'already in parents', cls._walkParents, ', skipping.')
+                continue
+
+            yield task, len(cls._walkParents)
+
+            _kwargs = dict((k, v) for k, v in kwargs.items() if k not in ['name', 'parent'])
+
+            with cls.walkParentsContext(parent=task.name):
+                for subtask in cls.walkIter(parent=task.name, **_kwargs):
+                    yield subtask
+
+    @classmethod
+    @contextmanager
+    def walkParentsContext(cls, parent: str):
+        cls._walkParents.append(parent)
+        yield
+        cls._walkParents.remove(parent)
 
     @property
     def continuous(self) -> bool:
@@ -56,3 +82,10 @@ class Task(Entity):
     def delete(self):
         db.delete('tasks', name=self.name)
         self._db_record = None
+
+
+if __name__ == '__main__':
+    db.init()
+    for t, l in Task.walkIter(parent=''):
+        print('\t' * l, str(t))
+    db.fini()

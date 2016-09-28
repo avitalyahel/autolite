@@ -33,8 +33,8 @@ class TableSchema(AttrDict):
     def for_update(self, **kwargs):
         return ','.join('='.join([k, _quoted(v)]) for k, v in self.items() if v or k in kwargs)
 
-    def for_where(self):
-        return ' AND '.join('{}={}'.format(k, _quoted(v)) for k, v in self.items() if v)
+    def for_where(self, **kwargs):
+        return ' AND '.join('{}={}'.format(k, _quoted(v)) for k, v in self.items() if v or k in kwargs)
 
 
 def _quoted(val):
@@ -57,6 +57,7 @@ PYTYPES = dict(
 TABLE_SCHEMAS = AttrDict(
     tasks=TableSchema(
         name='TEXT',
+        parent='TEXT',
         schedule='TEXT',
         state='TEXT',
         setup='TEXT',

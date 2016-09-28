@@ -12,6 +12,7 @@ Usage:
     actl (task | system) (read | delete) <name> [-v | -vv]
     actl task set <name> schedule ({sched_flags}) [-v | -vv]
     actl task set <name> (setup | command | teardown) <exe> [-v | -vv]
+    actl task set <name> parent <parent> [-v | -vv]
     actl task reset <name> [-v | -vv] [--force]
     actl system create <name> [--ip <ip>] [-v | -vv]
                      [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]

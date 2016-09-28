@@ -71,6 +71,9 @@ def task_set(arguments):
         if arguments[field]
     )
 
+    if arguments['parent']:
+        kwargs.update(parent=arguments['<parent>'])
+
     kwargs.update(**_task_sched_kwargs(arguments))
 
     db.update('tasks', name=arguments['<name>'], **kwargs)

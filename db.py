@@ -157,7 +157,7 @@ def rows(table, sep='', **where):
     sql = 'SELECT * FROM ' + table
 
     if where:
-        sql += ' WHERE ' + TABLE_SCHEMAS[table].new(**where).for_where()
+        sql += ' WHERE ' + TABLE_SCHEMAS[table].new(**where).for_where(**where)
 
     verbose(3, sql)
     return iter(sep.join(row) if sep else row
