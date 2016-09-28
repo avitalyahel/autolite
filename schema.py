@@ -57,6 +57,7 @@ PYTYPES = dict(
 TABLE_SCHEMAS = AttrDict(
     tasks=TableSchema(
         name='TEXT',
+        parent='TEXT',
         schedule='TEXT',
         state='TEXT',
         setup='TEXT',
