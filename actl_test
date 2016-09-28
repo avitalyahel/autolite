@@ -121,6 +121,9 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
         self.actl('task set', self.taskName, 'teardown ssh')
         self.assertEqual(self.read_task(self.taskName).teardown, 'ssh')
 
+        self.actl('task set', self.taskName, 'parent Dad')
+        self.assertEqual(self.read_task(self.taskName).parent, 'Dad')
+
         self.actl('task list')
 
     def test_task_crud_negative(self):
