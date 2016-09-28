@@ -121,6 +121,9 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
         self.actl('task set', self.taskName, 'teardown ssh')
         self.assertEqual(self.read_task(self.taskName).teardown, 'ssh')
 
+        self.actl('task set', self.taskName, 'parent Dad')
+        self.assertEqual(self.read_task(self.taskName).parent, 'Dad')
+
         self.actl('task list')
 
     def test_task_crud_negative(self):
@@ -132,9 +135,9 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.actl('task set missing schedule --continuous')
 
-        for exe in ('command', 'setup', 'teardown'):
+        for attr in ('command', 'setup', 'teardown', 'parent'):
             with self.assertRaises(SystemExit):
-                self.actl('task set missing', exe, 'x')
+                self.actl('task set missing', attr, 'x')
 
 
 class TestTaskState(ActlTestTask, unittest.TestCase):

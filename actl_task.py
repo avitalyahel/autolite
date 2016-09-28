@@ -65,13 +65,20 @@ def task_list():
 
 
 def task_set(arguments):
-    kwargs = dict(
-        (field, arguments['<exe>'])
-        for field in ['setup', 'command', 'teardown']
-        if arguments[field]
-    )
+    if arguments['schedule']:
+        kwargs = _task_sched_kwargs(arguments)
 
-    kwargs.update(**_task_sched_kwargs(arguments))
+    elif arguments['parent']:
+        kwargs = dict(parent=arguments['<parent>'])
+
+    else:
+        kwargs = dict(
+            (field, arguments['<exe>'])
+            for field in ['setup', 'command', 'teardown']
+            if arguments[field]
+        )
+
+    assert kwargs, 'unexpected empty attrs to set for tasks'
 
     db.update('tasks', name=arguments['<name>'], **kwargs)
 
