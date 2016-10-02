@@ -11,7 +11,7 @@ PACKAGE_NAME = SELF_SUB_DIR
 
 def menu(arguments):
     if arguments['list']:
-        system_list()
+        system_list(arguments)
 
     elif system_execute(arguments):
         pass
@@ -49,9 +49,18 @@ def _system_create_kwargs(arguments):
     )
 
 
-def system_list():
-    col_names = [name.upper() for name in db.g_table_columns.systems.names]
-    print_table(col_names, db.rows('systems'))
+def system_list(arguments):
+    if arguments['--long']:
+        col_names = db.g_table_columns.systems.names
+        rows = db.rows('systems')
+
+    else:
+        col_names = ['name', 'user']
+        systems = db.list_table('systems')
+        rows = ([task[col] for col in col_names] for task in systems)
+
+    col_titles = [name.upper() for name in col_names]
+    print_table(col_titles, rows)
 
 
 def system_set(arguments):
