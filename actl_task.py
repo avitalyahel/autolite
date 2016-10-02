@@ -60,17 +60,32 @@ def _task_sched_kwargs(arguments):
 
 
 def task_list(arguments):
-    if arguments['--long']:
-        col_names = db.g_table_columns.tasks.names
-        rows = db.rows('tasks')
+    if arguments['--recursive']:
+        for task, level in Task.walkIter(parent=''):
+            _print_subtask(task, level, arguments['--long'])
 
     else:
-        col_names = ['name', 'state']
-        tasks = db.list_table('tasks')
-        rows = ([task[col] for col in col_names] for task in tasks)
+        if arguments['--long']:
+            col_names = db.g_table_columns.tasks.names
+            rows = db.rows('tasks')
 
-    col_titles = [name.upper() for name in col_names]
-    print_table(col_titles, rows)
+        else:
+            col_names = ['name', 'state']
+            tasks = db.list_table('tasks')
+            rows = ([task[col] for col in col_names] for task in tasks)
+
+        col_titles = [name.upper() for name in col_names]
+        print_table(col_titles, rows)
+
+
+def _print_subtask(task, level, long):
+    print(('\t' * level), end='')
+
+    if long:
+        print(task.name, ', '.join('{}: {}'.format(k, v) for k, v in task.items() if v and k != 'name'))
+
+    else:
+        print('{}: {}'.format(task.name, task.state))
 
 
 def task_set(arguments):

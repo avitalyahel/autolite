@@ -25,7 +25,11 @@ class Entity(metaclass=MetaEntity):
         return repr(self._db_record)
 
     def __getattr__(self, name):
-        return self._db_record[name]
+        try:
+            return self._db_record[name]
+
+        except KeyError:
+            return self._db_record.__getattribute__(name)
 
     @classmethod
     def create(cls, **kwargs) -> object:

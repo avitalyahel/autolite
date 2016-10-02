@@ -12,14 +12,10 @@ class TableSchema(AttrDict):
         return ', '.join(': '.join([k, v]) for k, v in self.items() if v)
 
     def items(self):
-        if 'name' in self:
-            return itertools.chain(
-                (('name', self.name), ),
-                ((k, v) for k, v in super(TableSchema, self).items() if k != 'name')
-            )
-
-        else:
-            return super(TableSchema, self).items()
+        return itertools.chain(
+            (('name', self.name), ) if 'name' in self else tuple(),
+            ((k, v) for k, v in super(TableSchema, self).items() if k != 'name')
+        )
 
     def new(self, **kwargs):
         result = TableSchema((k, PYTYPES[v]()) for k, v in self.items())
