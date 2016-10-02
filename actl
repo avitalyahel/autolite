@@ -6,7 +6,7 @@ __doc__ = '''
 autolite control tool.
 
 Usage:
-    actl (task | system) list [-v | -vv]
+    actl (task | system) list [-l] [-v | -vv]
     actl task create <name> ({sched_flags}) [-v | -vv]
                      [--command=<exe>] [--setup=<exe>] [--teardown=<exe>]
     actl (task | system) (read | delete) <name> [-v | -vv]
@@ -26,6 +26,7 @@ Options:
     -h --help               Show this screen.
     --version               Show version.
     -v --verbose            Higher verbosity messages.
+    -l --long               Table list long format.
     --force                 Force the command.
 {sched_opts}
     --command <exe>         Task command executable.

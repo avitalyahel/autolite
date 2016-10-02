@@ -13,7 +13,7 @@ PACKAGE_NAME = SELF_SUB_DIR
 
 def menu(arguments):
     if arguments['list']:
-        task_list()
+        task_list(arguments)
 
     else:
         try:
@@ -59,9 +59,18 @@ def _task_sched_kwargs(arguments):
     return dict()
 
 
-def task_list():
-    col_names = [name.upper() for name in db.g_table_columns.tasks.names]
-    print_table(col_names, db.rows('tasks'))
+def task_list(arguments):
+    if arguments['--long']:
+        col_names = db.g_table_columns.tasks.names
+        rows = db.rows('tasks')
+
+    else:
+        col_names = ['name', 'state']
+        tasks = db.list_table('tasks')
+        rows = ([task[col] for col in col_names] for task in tasks)
+
+    col_titles = [name.upper() for name in col_names]
+    print_table(col_titles, rows)
 
 
 def task_set(arguments):
