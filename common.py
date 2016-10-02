@@ -25,7 +25,8 @@ def system_out(*cmd):
 def redirected_stdout_context(*cli) -> io.StringIO:
     sys.argv = []
     for c in cli:
-        sys.argv += c.split(' ')
+        if c:
+            sys.argv += c.split(' ')
 
     with io.StringIO() as buf, redirect_stdout(buf):
         yield buf
