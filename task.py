@@ -33,7 +33,7 @@ class Task(Entity):
     def walkParentsContext(cls, parent: str):
         cls._walkParents.append(parent)
         yield
-        cls._walkParents.remove(parent)
+        del cls._walkParents[-1]
 
     @property
     def continuous(self) -> bool:

@@ -33,7 +33,7 @@ class Entity(metaclass=MetaEntity):
 
     @classmethod
     def list(cls, **kwargs) -> tuple:
-        return (cls(schema=db_task) for db_task in db.list_table(cls.tableName, **kwargs))
+        return (cls(schema=db_record) for db_record in db.list_table(cls.tableName, **kwargs))
 
     @property
     def tableName(self):

@@ -75,8 +75,9 @@ def system_execute(arguments) -> bool:
         if arguments[cmd]:
             try:
                 system = System(arguments['<name>'])
+                cmd_method = getattr(system, cmd)
                 kwargs = dict(force=arguments['--force']) if cmd == 'release' else dict()
-                getattr(system, cmd)(**kwargs)
+                cmd_method(**kwargs)
 
             except PermissionError as exc:
                 print(PACKAGE_NAME, 'Error!', exc)

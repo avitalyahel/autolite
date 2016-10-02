@@ -39,7 +39,7 @@ def serve(timeout: int) -> int:
 
 
 def _terminate_and_fail(task: Task, timeout: int):
-    verbose(0, 'task', task.name, 'timed-out after', timeout, 'sec - terminating!')
+    verbose(0, 'task', task.name, 'timed-out after', timeout, 'sec, terminating...')
     g_procs[task.name].terminate()
     verbose(2, 'proc terminated, task:', task.name)
     task.fail()
