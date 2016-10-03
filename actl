@@ -6,22 +6,22 @@ __doc__ = '''
 autolite control tool.
 
 Usage:
-    actl task list [-l] [-r] [-v | -vv]
-    actl task create <name> ({sched_flags}) [-v | -vv]
+    actl task list [-l] [-r]
+    actl task create <name> ({sched_flags})
                      [--command=<exe>] [--setup=<exe>] [--teardown=<exe>]
-    actl (task | system) (read | delete) <name> [-v | -vv]
-    actl task set <name> schedule ({sched_flags}) [-v | -vv]
-    actl task set <name> (setup | command | teardown) <exe> [-v | -vv]
-    actl task set <name> parent <parent> [-v | -vv]
-    actl task reset <name> [-v | -vv] [--force]
-    actl system list [-l] [-v | -vv]
-    actl system create <name> [--ip <ip>] [-v | -vv]
+    actl (task | system) (read | delete) <name>
+    actl task set <name> schedule ({sched_flags})
+    actl task set <name> (setup | command | teardown) <exe>
+    actl task set <name> parent <parent>
+    actl task reset <name> [--force]
+    actl system list [-l]
+    actl system create <name> [--ip <ip>]
                      [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
-    actl system set <name> ip <ip> [-v | -vv]
-    actl system set <name> (installer | cleaner | monitor | config) <exe> [-v | -vv]
-    actl system (acquire | install | clean | monitor | config) <name> [-v | -vv]
-    actl system release <name> [--force] [-v | -vv]
-    actl reset [-v | -vv]
+    actl system set <name> ip <ip>
+    actl system set <name> (installer | cleaner | monitor | config) <exe>
+    actl system (acquire | install | clean | monitor | config) <name>
+    actl system release <name> [--force]
+    actl reset
 
 Options:
     -h --help               Show this screen.
@@ -75,11 +75,18 @@ def actl(arguments):
             print('Did not reset.')
 
 
+def _verbosity_flags(doc: str) -> str:
+    return '\n'.join(
+        (d + ' [-v | -vv]') if d.lstrip().startswith('actl ') else d
+        for d in doc.split('\n')
+    )
+
+
 if __name__ == '__main__':
     from docopt import docopt
 
     with open(os.path.join(SELF_FULL_DIR, 'version')) as ver_file:
-        arguments = docopt(__doc__, version=ver_file.read())
+        arguments = docopt(_verbosity_flags(__doc__), version=ver_file.read())
 
     set_verbosity(arguments['--verbose'])
 
