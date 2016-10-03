@@ -6,7 +6,7 @@ __doc__ = '''
 autolite control tool.
 
 Usage:
-    actl task list [-l] [-r]
+    actl task list [-l | -J | -Y] [-r]
     actl task create <name> ({sched_flags})
                      [--command=<exe>] [--setup=<exe>] [--teardown=<exe>]
     actl (task | system) (read | delete) <name>
@@ -14,7 +14,7 @@ Usage:
     actl task set <name> (setup | command | teardown) <exe>
     actl task set <name> parent <parent>
     actl task reset <name> [--force]
-    actl system list [-l]
+    actl system list [-l | -J | -Y]
     actl system create <name> [--ip <ip>]
                      [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
     actl system set <name> ip <ip>
@@ -28,6 +28,8 @@ Options:
     --version               Show version.
     -v --verbose            Higher verbosity messages.
     -l --long               Table list long format.
+    -J --JSON               List with JSON format.
+    -Y --YAML               List with YAML format.
     -r --recursive          Task recursive listing, by lineage.
     --force                 Force the command.
 {sched_opts}
