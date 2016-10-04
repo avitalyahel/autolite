@@ -1,7 +1,5 @@
 import os
 
-DB_NAME = 'autolite.db'
-
 
 def get_self_path_dir(this_file: str) -> (str, str, str):
     SELF_ABS_PATH = os.path.realpath(this_file)
