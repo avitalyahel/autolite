@@ -13,6 +13,7 @@ Usage:
     actl task set <name> schedule ({sched_flags})
     actl task set <name> (setup | command | teardown) <exe>
     actl task set <name> parent <parent>
+    actl task set <name> email <email>
     actl task reset <name> [--force]
     actl system list [-l | -J | -Y]
     actl system create <name> [--ip <ip>]

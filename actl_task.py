@@ -136,6 +136,9 @@ def task_set(arguments):
     elif arguments['parent']:
         kwargs = dict(parent=arguments['<parent>'])
 
+    elif arguments['email']:
+        kwargs = dict(email=arguments['<email>'])
+
     else:
         kwargs = dict(
             (field, arguments['<exe>'])

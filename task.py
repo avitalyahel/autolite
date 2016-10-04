@@ -1,8 +1,12 @@
+import yaml
 from datetime import datetime
 from contextlib import contextmanager
 
 import db
+import mail
+import settings
 from entity import Entity
+from common import AttrDict
 from verbosity import verbose
 
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
@@ -36,6 +40,19 @@ class Task(Entity):
         del cls._walkParents[-1]
 
     @property
+    def mailClient(self):
+        if not hasattr(self, '_mailClient'):
+            email_settings = settings.read().email
+            self._mailClient = mail.Email(
+                smtp_server=email_settings.server,
+                smtp_port=email_settings.port,
+                smtp_username=email_settings.username,
+                smtp_password=email_settings.password,
+            )
+
+        return self._mailClient
+
+    @property
     def continuous(self) -> bool:
         return self._db_record.schedule == 'continuous'
 
@@ -67,17 +84,39 @@ class Task(Entity):
         return (datetime.now() - self.lastDT).total_seconds() > timeout
 
     def start(self):
-        self._db_record.state = 'running'
-        self._db_record.last = datetime.now()
-        db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
+        with self.notifyStateChangeContext():
+            self._db_record.state = 'running'
+            self._db_record.last = datetime.now()
+            db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
 
     def fail(self):
-        self._db_record.state = 'failed'
-        db.update('tasks', name=self.name, state=self._db_record.state)
+        with self.notifyStateChangeContext():
+            self._db_record.state = 'failed'
+            db.update('tasks', name=self.name, state=self._db_record.state)
 
     def reset(self):
-        self._db_record.state = 'pending'
-        db.update('tasks', name=self.name, state=self._db_record.state)
+        with self.notifyStateChangeContext():
+            self._db_record.state = 'pending'
+            db.update('tasks', name=self.name, state=self._db_record.state)
+
+    @contextmanager
+    def notifyStateChangeContext(self):
+        state = self.state
+
+        yield
+
+        self.notify('task {} now {} (was {})'.format(self.name, self.state, state)
+                    if self.state != state else '')
+
+    def notify(self, subject: str = ''):
+        if self.email:
+            _subject = subject if subject else 'task {name} now {state}'.format(self.name, self.state)
+
+            self.mailClient.send(
+                recipients=self.email.split(','),
+                subject='autolite: ' + _subject,
+                content=yaml.dump(self.__dict__, default_flow_style=False).replace('\n', '<br/>'),
+            )
 
     def delete(self):
         db.delete('tasks', name=self.name)

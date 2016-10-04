@@ -301,6 +301,17 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
         self.actl('task reset', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
+    def test_cron_job_notify(self):
+        import settings
+        email_settings = settings.read().email
+
+        if not email_settings.username or not email_settings.password:
+            self.skipTest('missing settings for email username and/or passowrd'
+                          ' (at settings-user.yaml, based on settings-default.yaml)')
+
+        db.update('tasks', name=self.taskName, email=email_settings.username)
+        self.crontab_job(self._v)
+
 
 def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:
     loadedTests = unittest.defaultTestLoader.loadTestsFromTestCase

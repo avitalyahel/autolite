@@ -48,7 +48,7 @@ def main(arguments):
                 break
 
             else:
-                verbose(2, running, 'running tasks, sleeping', interval, 'secs...')
+                verbose(1, running, 'running tasks, sleeping', interval, 'secs...')
 
             sleep(interval)
 

@@ -1,1 +1,6 @@
 db_path: ./autolite.db
+email:
+    server: smtp.gmail.com
+    port: 587
+    username: ''
+    password: ''
