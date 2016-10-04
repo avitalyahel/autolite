@@ -27,6 +27,7 @@ import unittest
 import docopt
 
 import db
+import settings
 from common import AttrDict, redirected_stdout_context
 from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_context
 
@@ -41,9 +42,12 @@ class ActlTest(object):
     def setUpClass(cls):
         import tempfile
         cls._tmpDir = tempfile.mkdtemp()
-        cls._cwd = os.getcwd()
-        os.chdir(cls._tmpDir)
-        verbose(2, 'created tmp dir:', os.getcwd())
+        verbose(2, 'created tmp dir:', cls._tmpDir)
+
+        with settings.write_context() as user_settings:
+            user_settings.db_path = os.path.join(cls._tmpDir, 'my.db')
+            verbose(2, 'set db_path to', user_settings.db_path)
+
         db.init()
 
     @classmethod
@@ -65,7 +69,6 @@ class ActlTest(object):
                 raise exc
 
         del cls._tmpDir
-        os.chdir(cls._cwd)
 
     def actl(self, *cli) -> str:
         with redirected_stdout_context('actl', *cli) as buf:

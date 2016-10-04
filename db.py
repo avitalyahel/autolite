@@ -1,12 +1,14 @@
+import os
 import sqlite3
 
-from consts import DB_NAME
+import settings
 from common import AttrDict
 from schema import TABLE_SCHEMAS, TableSchema
 from verbosity import verbose, set_verbosity
 
 
 g_conn = None
+g_db_path = ''
 g_table_columns = AttrDict()  # {tname: TableColumns()}
 
 
@@ -38,8 +40,10 @@ class TableColumns(object):
 def connect():
     global g_conn
     if g_conn is None:
-        g_conn = sqlite3.connect(DB_NAME)
-        verbose(2, 'connected to', DB_NAME)
+        global g_db_path
+        g_db_path = os.path.expanduser(settings.read().db_path)
+        g_conn = sqlite3.connect(g_db_path)
+        verbose(2, 'connected to', g_db_path)
 
 
 def disconnect():
@@ -47,7 +51,7 @@ def disconnect():
     if g_conn is not None:
         g_conn.commit()
         g_conn.close()
-        verbose(2, 'closed connection to:', DB_NAME)
+        verbose(2, 'closed connection to:', g_db_path)
         g_conn = None
 
 
