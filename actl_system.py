@@ -12,7 +12,7 @@ PACKAGE_NAME = SELF_SUB_DIR
 def menu(arguments):
     if arguments['list']:
         if arguments['--YAML']:
-            common.dump(System.list(), fmt='YAML', entry=lambda item: {item.name: dict(item.__dict__)})
+            common.dump(System.list(), fmt='YAML', entry=lambda item: {item.name: item.__dict__})
 
         elif arguments['--JSON']:
             common.dump(System.list(), fmt='JSON', entry=lambda item: {item.name: item.__dict__})
