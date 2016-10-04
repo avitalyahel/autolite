@@ -122,7 +122,7 @@ def read(table, name) -> TableSchema:
         raise NameError('missing in {}: {}'.format(table, name))
 
     record = _new_schema(table, values)
-    verbose(1, 'read', table[:-1], repr(record))
+    verbose(2, 'read', table[:-1], repr(record))
     return record
 
 
