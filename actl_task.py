@@ -79,7 +79,7 @@ def task_lineage(arguments):
             while level < len(stack) - 1:
                 stack.pop()
 
-            stack[-1] += [dict(task.__dict__)]
+            stack[-1] += [task.__dict__]
 
         else:
             _print_subtask(arguments, task, level)
@@ -104,7 +104,7 @@ def _print_subtask(arguments, task, level):
 
 def task_list(arguments):
     if arguments['--YAML']:
-        print(yaml.dump([{t.name: dict(t.__dict__)} for t in Task.list()],
+        print(yaml.dump([{t.name: t.__dict__} for t in Task.list()],
                         default_flow_style=False))
 
     elif arguments['--JSON']:

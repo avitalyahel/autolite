@@ -10,15 +10,31 @@ from contextlib import contextmanager, redirect_stdout
 
 class AttrDict(dict):
 
-    def __getattr__(self, name):
-        try:
-            return self[name]
+    def __init__(self, *args, **kwargs):
+        if args and isinstance(args[0], dict):
+            for k, v in args[0].items():
+                self[k] = AttrDict(v) if isinstance(v, dict) else v
 
-        except KeyError:
-            return self.__getattribute__(name)
+        else:
+            super(AttrDict, self).__init__(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return self[name]
 
     def __setattr__(self, name, value):
         self[name] = value
+
+    def update(self, keyvalues: dict):
+        for k, v in keyvalues.items():
+            if k in self and isinstance(v, dict):
+                self[k].update(v)
+
+            else:
+                self[k] = v
+
+    @property
+    def __dict__(self):
+        return dict((k, v.__dict__ if isinstance(v, type(self)) else v) for k, v in self.items())
 
 
 def system_out(*cmd):
