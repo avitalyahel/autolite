@@ -46,6 +46,7 @@ class ActlTest(object):
         verbose(2, 'created tmp dir:', cls._tmpDir)
 
         with settings.write_context() as user_settings:
+            cls._saved_db_path = user_settings.db_path if 'db_path' in user_settings else ''
             user_settings.db_path = os.path.join(cls._tmpDir, 'my.db')
             verbose(2, 'set db_path to', user_settings.db_path)
 
@@ -70,6 +71,15 @@ class ActlTest(object):
                 raise exc
 
         del cls._tmpDir
+
+        with settings.write_context() as user_settings:
+            if cls._saved_db_path:
+                user_settings.db_path = cls._saved_db_path
+                verbose(2, 'reset db_path to', user_settings.db_path)
+
+            else:
+                del user_settings['db_path']
+                verbose(2, 'deleted db_path from user setttings')
 
     def actl(self, *cli) -> str:
         with redirected_stdout_context('actl', *cli) as buf:
