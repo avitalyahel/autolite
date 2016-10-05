@@ -22,6 +22,7 @@ Usage:
     actl system set <name> (installer | cleaner | monitor | config) <exe>
     actl system (acquire | install | clean | monitor | config) <name>
     actl system release <name> [--force]
+    actl test
 
 Options:
     -h --help               Show this screen.
@@ -67,6 +68,9 @@ def actl(arguments):
 
     elif arguments['system']:
         actl_system.menu(arguments)
+
+    elif arguments['test']:
+        os.system('./actl_test ' + '-{}'.format('v' * max(get_verbosity_level(), 1)))
 
 
 def _verbosity_flags(doc: str) -> str:
