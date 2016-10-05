@@ -110,7 +110,7 @@ class Task(Entity):
 
     def notify(self, subject: str = ''):
         if self.email:
-            _subject = subject if subject else 'task {name} now {state}'.format(self.name, self.state)
+            _subject = subject if subject else 'task {} now {}'.format(self.name, self.state)
 
             self.mailClient.send(
                 recipients=self.email.split(','),

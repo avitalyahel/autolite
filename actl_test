@@ -312,6 +312,9 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
         db.update('tasks', name=self.taskName, email=email_settings.username)
         self.crontab_job(self._v)
 
+        from task import Task
+        Task(name=self.taskName).notify()
+
 
 def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:
     loadedTests = unittest.defaultTestLoader.loadTestsFromTestCase
