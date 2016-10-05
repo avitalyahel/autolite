@@ -20,12 +20,14 @@ import os
 import sys
 import imp
 import yaml
+import json
 import getpass
 import unittest
 
 import docopt
 
 import db
+import settings
 from common import AttrDict, redirected_stdout_context
 from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_context
 
@@ -40,9 +42,12 @@ class ActlTest(object):
     def setUpClass(cls):
         import tempfile
         cls._tmpDir = tempfile.mkdtemp()
-        cls._cwd = os.getcwd()
-        os.chdir(cls._tmpDir)
-        verbose(2, 'created tmp dir:', os.getcwd())
+        verbose(2, 'created tmp dir:', cls._tmpDir)
+
+        with settings.write_context() as user_settings:
+            user_settings.db_path = os.path.join(cls._tmpDir, 'my.db')
+            verbose(2, 'set db_path to', user_settings.db_path)
+
         db.init()
 
     @classmethod
@@ -64,7 +69,6 @@ class ActlTest(object):
                 raise exc
 
         del cls._tmpDir
-        os.chdir(cls._cwd)
 
     def actl(self, *cli) -> str:
         with redirected_stdout_context('actl', *cli) as buf:
@@ -124,8 +128,12 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
         self.actl('task set', self.taskName, 'parent Dad')
         self.assertEqual(self.read_task(self.taskName).parent, 'Dad')
 
-        for task_list_flags in ['', '-l', '-r', '-lr']:
-            self.actl('task list', task_list_flags)
+        for task_list_flags in ['', '-l', '-r', '-lr', '-J', '-Y', '-rJ', '-rY']:
+            out = self.actl('task list', task_list_flags)
+
+            if '-J' in task_list_flags or '-Y' in task_list_flags:
+                tasks_dict = json.loads(out) if '-J' in task_list_flags else yaml.load(out)
+                self.assertIn(self.taskName, tasks_dict[0])
 
     def test_task_crud_negative(self):
         with self.assertRaises(SystemExit):
@@ -202,8 +210,12 @@ class TestSystemCRUD(ActlTestSystem, unittest.TestCase):
         self.actl('system set', self.systemName, 'ip', 'localhost')
         self.assertEqual(self.read_system(self.systemName).ip, 'localhost')
 
-        self.actl('system list')
-        self.actl('system list -l')
+        for system_list_flags in ['', '-l', '-J', '-Y']:
+            out = self.actl('system list', system_list_flags)
+
+            if '-J' in system_list_flags or '-Y' in system_list_flags:
+                tasks_dict = json.loads(out) if '-J' in system_list_flags else yaml.load(out)
+                self.assertIn(self.systemName, tasks_dict[0])
 
     def test_system_crud_negative(self):
         with self.assertRaises(SystemExit):
@@ -288,6 +300,17 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
 
         self.actl('task reset', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
+
+    def test_cron_job_notify(self):
+        import settings
+        email_settings = settings.read().email
+
+        if not email_settings.username or not email_settings.password:
+            self.skipTest('missing settings for email username and/or passowrd'
+                          ' (at settings-user.yaml, based on settings-default.yaml)')
+
+        db.update('tasks', name=self.taskName, email=email_settings.username)
+        self.crontab_job(self._v)
 
 
 def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:

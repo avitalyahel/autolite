@@ -1,5 +1,7 @@
 import io
 import sys
+import yaml
+import json
 import getpass
 import itertools
 import subprocess
@@ -8,11 +10,31 @@ from contextlib import contextmanager, redirect_stdout
 
 class AttrDict(dict):
 
+    def __init__(self, *args, **kwargs):
+        if args and isinstance(args[0], dict):
+            for k, v in args[0].items():
+                self[k] = AttrDict(v) if isinstance(v, dict) else v
+
+        else:
+            super(AttrDict, self).__init__(*args, **kwargs)
+
     def __getattr__(self, name):
         return self[name]
 
     def __setattr__(self, name, value):
         self[name] = value
+
+    def update(self, keyvalues: dict):
+        for k, v in keyvalues.items():
+            if k in self and isinstance(v, dict):
+                self[k].update(v)
+
+            else:
+                self[k] = v
+
+    @property
+    def __dict__(self):
+        return dict((k, v.__dict__ if isinstance(v, type(self)) else v) for k, v in self.items())
 
 
 def system_out(*cmd):
@@ -65,3 +87,14 @@ def print_table(titles: iter, rows: iter):
 
 def active_user_name() -> str:
     return getpass.getuser()
+
+
+def dump(items: iter, fmt: str, entry=lambda item: item):
+    if fmt == 'YAML':
+        print(yaml.dump([entry(i) for i in items], default_flow_style=False))
+
+    elif fmt == 'JSON':
+        print(json.dumps([entry(i) for i in items], indent=4))
+
+    else:
+        raise KeyError('unsupported dump format: ' + fmt)

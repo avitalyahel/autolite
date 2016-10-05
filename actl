@@ -6,28 +6,30 @@ __doc__ = '''
 autolite control tool.
 
 Usage:
-    actl task list [-l] [-r]
+    actl task list [-l | -J | -Y] [-r]
     actl task create <name> ({sched_flags})
                      [--command=<exe>] [--setup=<exe>] [--teardown=<exe>]
     actl (task | system) (read | delete) <name>
     actl task set <name> schedule ({sched_flags})
     actl task set <name> (setup | command | teardown) <exe>
     actl task set <name> parent <parent>
+    actl task set <name> email <email>
     actl task reset <name> [--force]
-    actl system list [-l]
+    actl system list [-l | -J | -Y]
     actl system create <name> [--ip <ip>]
                      [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
     actl system set <name> ip <ip>
     actl system set <name> (installer | cleaner | monitor | config) <exe>
     actl system (acquire | install | clean | monitor | config) <name>
     actl system release <name> [--force]
-    actl reset
 
 Options:
     -h --help               Show this screen.
     --version               Show version.
     -v --verbose            Higher verbosity messages.
     -l --long               Table list long format.
+    -J --JSON               List with JSON format.
+    -Y --YAML               List with YAML format.
     -r --recursive          Task recursive listing, by lineage.
     --force                 Force the command.
 {sched_opts}
@@ -65,14 +67,6 @@ def actl(arguments):
 
     elif arguments['system']:
         actl_system.menu(arguments)
-
-    elif arguments['reset']:
-        if input('Confirm Db reset (N|y): ') == 'y':
-            db.init(drop=True)
-            print('Db have been reset!')
-
-        else:
-            print('Did not reset.')
 
 
 def _verbosity_flags(doc: str) -> str:

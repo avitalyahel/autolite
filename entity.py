@@ -29,7 +29,7 @@ class Entity(metaclass=MetaEntity):
             return self._db_record[name]
 
         except KeyError:
-            return self._db_record.__getattribute__(name)
+            return self.__getattribute__(name)
 
     @classmethod
     def create(cls, **kwargs) -> object:
@@ -42,3 +42,7 @@ class Entity(metaclass=MetaEntity):
     @property
     def tableName(self):
         return type(self).tableName
+
+    @property
+    def __dict__(self):
+        return dict(self._db_record)

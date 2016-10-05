@@ -2,8 +2,8 @@ import sys
 
 import db
 import consts
+import common
 from system import System
-from common import print_table
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
 PACKAGE_NAME = SELF_SUB_DIR
@@ -11,7 +11,14 @@ PACKAGE_NAME = SELF_SUB_DIR
 
 def menu(arguments):
     if arguments['list']:
-        system_list(arguments)
+        if arguments['--YAML']:
+            common.dump(System.list(), fmt='YAML', entry=lambda item: {item.name: item.__dict__})
+
+        elif arguments['--JSON']:
+            common.dump(System.list(), fmt='JSON', entry=lambda item: {item.name: item.__dict__})
+
+        else:
+            system_list_table(arguments)
 
     elif system_execute(arguments):
         pass
@@ -49,7 +56,7 @@ def _system_create_kwargs(arguments):
     )
 
 
-def system_list(arguments):
+def system_list_table(arguments):
     if arguments['--long']:
         col_names = db.g_table_columns.systems.names
         rows = db.rows('systems')
@@ -60,7 +67,7 @@ def system_list(arguments):
         rows = ([task[col] for col in col_names] for task in systems)
 
     col_titles = [name.upper() for name in col_names]
-    print_table(col_titles, rows)
+    common.print_table(col_titles, rows)
 
 
 def system_set(arguments):
