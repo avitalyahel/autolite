@@ -19,6 +19,7 @@ import re
 import os
 import sys
 import imp
+import math
 import yaml
 import json
 import getpass
@@ -327,11 +328,14 @@ class TestLister(object):
         pass
 
     def run(self, suite: unittest.TestSuite):
+        count = sum(1 for case in suite for test in case._tests)
+        padding = math.ceil(math.log(count, 10))
+
         i = 0
         for case in suite:
             for test in case._tests:
                 i += 1
-                print(i, repr(test))
+                print(('{:%dd}' % padding).format(i), repr(test))
 
 
 ALL_TEST_CASES = (
