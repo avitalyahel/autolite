@@ -22,7 +22,7 @@ Usage:
     actl system set <name> (installer | cleaner | monitor | config) <exe>
     actl system (acquire | install | clean | monitor | config) <name>
     actl system release <name> [--force]
-    actl test
+    actl test [-- <arg>...]
 
 Options:
     -h --help               Show this screen.
@@ -70,7 +70,9 @@ def actl(arguments):
         actl_system.menu(arguments)
 
     elif arguments['test']:
-        os.system('./actl_test ' + '-{}'.format('v' * max(get_verbosity_level(), 1)))
+        os.system('./actl_test ' +
+                  '-{} '.format('v' * max(get_verbosity_level(), 1)) +
+                  ' '.join(arg for arg in arguments['<arg>'] if arg != '--'))
 
 
 def _verbosity_flags(doc: str) -> str:
