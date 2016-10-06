@@ -16,11 +16,11 @@
 
 ### Terminal UI
 
-Automation definition includes: **system pool**, **tasks**, **schduling** & **notifications**. Here in **autolite**, all these are done by scripting and CLI  <span style="color:RoyalBlue">[Future: Web UI for monitoring and launching]</span>.
+Automation definition includes: **system pool**, **tasks**, **schduling** & **notifications**. Here in **autolite**, all these are done by scripting and CLI  *<span style="color:RoyalBlue">[Future: Web UI for monitoring and launching]</span>*.
 
 ### Objects: Tasks & Systems
 
-* **Task** basic attributes are: **command** (executable), **schedule** & **state** <span style="color:RoyalBlue">[WIP: task hierarchial launch & state summary (tracking: [here](https://github.com/avitalyahel/autolite/issues/20))]</span>.
+* **Task** basic attributes are: **command** (executable), **schedule** & **state** *<span style="color:RoyalBlue">[WIP: task hierarchial launch & state summary (tracking: [here](https://github.com/avitalyahel/autolite/issues/20))]</span>*.
 * **System** basic attributes are: **name**, **user** & **installer** (executable).
 
 The two are not directly connected, rather may be associated by scripts.
@@ -37,13 +37,12 @@ $ cd autolite
 $ install
 ```
 
-(2) On Linux <span style="color:RoyalBlue">[Future: on Win32]</span>, add **autolite** cron job to `crontab`:
+(2) On Linux *<span style="color:RoyalBlue">[Future: on Win32]</span>*, add **autolite** cron job to `crontab`:
 
 `$ crontab -e`
 
 ```
 * * * * * $AUTOLITE_DIR/crontab_job >/dev/null 2>&1
-
 ```
 This shall execute `autolite/crontab_job` every minute, and let **autolite** manage scheduling & notifications.
 
@@ -61,6 +60,8 @@ This shall execute `autolite/crontab_job` every minute, and let **autolite** man
     NAME             COMMAND           PARENT  SETUP  LAST  SCHEDULE    EMAIL  STATE    TEARDOWN
     Full-Regression  run-tests full                         daily              pending
     CI               run-tests sanity                       continuous         pending
+    $ actl task set Full-Regression email nightly-officer@mine.com
+    $ actl task set CI email ci-officer@mine.com
 
 ### Basic System Definition
 
@@ -107,7 +108,7 @@ The tool's configuration is done by `settings` files in YAML format:
 
 To share **autolite**'s Db with other users, each user need to install separately and then the Db file need to be put in a shared location, typically on the NFS. Then each user may set the `db_path` parameter to that location.
 
-Restting the Db is simply by deleting the Db file. Over NFS, permissions may be set for that file so only selected users may delete - or modify - the Db file.
+Resetting the Db is done simply by deleting the Db file. Over NFS, permissions may be set so only selected users may delete - or modify - the Db file.
 
 ### Full Help
 ```
