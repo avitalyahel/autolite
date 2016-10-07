@@ -1,6 +1,6 @@
 # autolite (v0.2)
 
-![alt text](http://github.com/avitalyahel/autolite/blob/master/python-3.100x34.png "python 3")
+![alt text](https://github.com/avitalyahel/autolite/blob/master/python-3.100x34.png "python 3")
 
 ### *Phase:* Alpha
 
