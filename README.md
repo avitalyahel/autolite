@@ -1,5 +1,7 @@
 # autolite (v0.2)
 
+![alt text](http://github.com/avitalyahel/autolite/blob/master/python-3.100x34.png "python 3")
+
 ### *Phase:* Alpha
 
 ## Mission
@@ -157,3 +159,4 @@ Options:
 ## Open Issues
 
 The open issues are mangaged at [GitHub/issues](https://github.com/avitalyahel/autolite/issues) as well.
+
