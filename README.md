@@ -52,38 +52,38 @@ This shall execute `autolite/crontab_job` every minute, and let **autolite** man
 
 ### Basic Task Definition
 
-    $ actl task create Full-Regression --daily --command "./run-tests full"
-    $ actl task create CI --continuous --command "run-tests sanity"
-    $ actl task list
+    $ autolite task create Full-Regression --daily --command "./run-tests full"
+    $ autolite task create CI --continuous --command "run-tests sanity"
+    $ autolite task list
     NAME             STATE
     Full-Regression  pending
     CI               pending
-    $ actl task list -l
+    $ autolite task list -l
     NAME             COMMAND           PARENT  SETUP  LAST  SCHEDULE    EMAIL  STATE    TEARDOWN
     Full-Regression  run-tests full                         daily              pending
     CI               run-tests sanity                       continuous         pending
-    $ actl task set Full-Regression email nightly-officer@mine.com
-    $ actl task set CI email ci-officer@mine.com
+    $ autolite task set Full-Regression email nightly-officer@mine.com
+    $ autolite task set CI email ci-officer@mine.com
 
 ### Basic System Definition
 
-    $ actl system create sys1 --installer "./install sys1" --cleaner "./clean sys1"
-    $ actl system create sys2 --installer "./install sys2" --cleaner "./clean sys2"
-    $ actl system list
+    $ autolite system create sys1 --installer "./install sys1" --cleaner "./clean sys1"
+    $ autolite system create sys2 --installer "./install sys2" --cleaner "./clean sys2"
+    $ autolite system list
     NAME  USER
     sys1
     sys2
-    $ actl system list -l
+    $ autolite system list -l
     NAME  CONFIG  INSTALLER       IP  CLEANER       USER  MONITOR
     sys1          ./install sys1      ./clean sys1
     sys2          ./install sys2      ./clean sys2
     
 ### Task scripts may access the system pool
 
-    actl system acquire sys1  # sys1's user set to the active user
-    actl system install       # executes sys1's installer
+    autolite system acquire sys1  # sys1's user set to the active user
+    autolite system install       # executes sys1's installer
     ...
-    actl system releasee      # sys1's user is cleared
+    autolite system releasee      # sys1's user is cleared
 
 ### Settings
 
@@ -117,23 +117,23 @@ Resetting the Db is done simply by deleting the Db file. Over NFS, permissions m
 autolite control tool.
 
 Usage:
-    actl task list [-l | -J | -Y] [-r] [-v | -vv]
-    actl task create <name> (--daily | --continuous | --never) [-v | -vv]
+    autolite task list [-l | -J | -Y] [-r] [-v | -vv]
+    autolite task create <name> (--daily | --continuous | --never) [-v | -vv]
                      [--command=<exe>] [--setup=<exe>] [--teardown=<exe>]
-    actl (task | system) (read | delete) <name> [-v | -vv]
-    actl task set <name> schedule (--daily | --continuous | --never) [-v | -vv]
-    actl task set <name> (setup | command | teardown) <exe> [-v | -vv]
-    actl task set <name> parent <parent> [-v | -vv]
-    actl task set <name> email <email> [-v | -vv]
-    actl task reset <name> [--force] [-v | -vv]
-    actl system list [-l | -J | -Y] [-v | -vv]
-    actl system create <name> [--ip <ip>] [-v | -vv]
+    autolite (task | system) (read | delete) <name> [-v | -vv]
+    autolite task set <name> schedule (--daily | --continuous | --never) [-v | -vv]
+    autolite task set <name> (setup | command | teardown) <exe> [-v | -vv]
+    autolite task set <name> parent <parent> [-v | -vv]
+    autolite task set <name> email <email> [-v | -vv]
+    autolite task reset <name> [--force] [-v | -vv]
+    autolite system list [-l | -J | -Y] [-v | -vv]
+    autolite system create <name> [--ip <ip>] [-v | -vv]
                      [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
-    actl system set <name> ip <ip> [-v | -vv]
-    actl system set <name> (installer | cleaner | monitor | config) <exe> [-v | -vv]
-    actl system (acquire | install | clean | monitor | config) <name> [-v | -vv]
-    actl system release <name> [--force] [-v | -vv]
-    actl test [-- <arg>...] [-v | -vv]
+    autolite system set <name> ip <ip> [-v | -vv]
+    autolite system set <name> (installer | cleaner | monitor | config) <exe> [-v | -vv]
+    autolite system (acquire | install | clean | monitor | config) <name> [-v | -vv]
+    autolite system release <name> [--force] [-v | -vv]
+    autolite test [-- <arg>...] [-v | -vv]
 
 Options:
     -h --help               Show this screen.

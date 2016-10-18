@@ -64,11 +64,12 @@ class Email(object):
         verbose(1, 'Mail sent to {}: "{}"'.format(recipients, subject))
 
     def __del__(self):
-        try:
-            self.smpt.quit()
+        if hasattr(self, 'smpt'):
+            try:
+                self.smpt.quit()
 
-        except smtplib.SMTPServerDisconnected:
-            pass
+            except smtplib.SMTPServerDisconnected:
+                pass
 
 
 if __name__ == '__main__':

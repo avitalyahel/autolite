@@ -3,7 +3,7 @@
 autolite control tool unit test.
 
 Usage:
-    actl_test [<filter>] [--list] [--resume] [-v | -vv | -vvv]
+    autolite_test [<filter>] [--list] [--resume] [-v | -vv | -vvv]
 
 Arguments:
     <filter>        RegEx pattern to match test case names.
@@ -33,7 +33,7 @@ from common import AttrDict, redirected_stdout_context
 from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_context
 
 
-actl = imp.load_source('actl', './actl')
+autolite = imp.load_source('autolite', './autolite')
 crontab_job = imp.load_source('crontab_job', './crontab_job')
 
 
@@ -81,12 +81,12 @@ class ActlTest(object):
                 del user_settings['db_path']
                 verbose(2, 'deleted db_path from user setttings')
 
-    def actl(self, *cli) -> str:
-        with redirected_stdout_context('actl', *cli) as buf:
-            actl.actl(docopt.docopt(actl.__doc__))
+    def autolite(self, *cli) -> str:
+        with redirected_stdout_context('autolite', *cli) as buf:
+            autolite.autolite(docopt.docopt(autolite.__doc__))
             result = buf.getvalue()
 
-        verbose(3, 'actl', ' '.join(cli), '->\n', '\r' + result[:-1])
+        verbose(3, 'autolite', ' '.join(cli), '->\n', '\r' + result[:-1])
         return result
 
     def crontab_job(self, *cli) -> str:
@@ -102,7 +102,7 @@ class ActlTestTask(ActlTest):
 
     def setUp(self):
         self._taskName = 't1'
-        self.actl('task create', self.taskName, '--daily')
+        self.autolite('task create', self.taskName, '--daily')
         self.assertEqual(self.read_task(self.taskName).schedule, 'daily')
 
     @property
@@ -110,11 +110,11 @@ class ActlTestTask(ActlTest):
         return self._taskName
 
     def read_task(self, name: str) -> AttrDict:
-        task_str = self.actl('task read ' + name)
+        task_str = self.autolite('task read ' + name)
         return AttrDict(yaml.load(task_str.replace(', ', '\n')))
 
     def tearDown(self):
-        self.actl('task delete', self.taskName)
+        self.autolite('task delete', self.taskName)
 
         with self.assertRaises(SystemExit):
             self.read_task(self.taskName)
@@ -124,23 +124,23 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
 
     def test_task_crud_positive(self):
         for sched in ['continuous', 'daily', 'never']:
-            self.actl('task set', self.taskName, 'schedule --{}'.format(sched))
+            self.autolite('task set', self.taskName, 'schedule --{}'.format(sched))
             self.assertEqual(self.read_task(self.taskName).schedule, sched)
 
-        self.actl('task set', self.taskName, 'command ls')
+        self.autolite('task set', self.taskName, 'command ls')
         self.assertEqual(self.read_task(self.taskName).command, 'ls')
 
-        self.actl('task set', self.taskName, 'setup echo')
+        self.autolite('task set', self.taskName, 'setup echo')
         self.assertEqual(self.read_task(self.taskName).setup, 'echo')
 
-        self.actl('task set', self.taskName, 'teardown ssh')
+        self.autolite('task set', self.taskName, 'teardown ssh')
         self.assertEqual(self.read_task(self.taskName).teardown, 'ssh')
 
-        self.actl('task set', self.taskName, 'parent Dad')
+        self.autolite('task set', self.taskName, 'parent Dad')
         self.assertEqual(self.read_task(self.taskName).parent, 'Dad')
 
         for task_list_flags in ['', '-l', '-r', '-lr', '-J', '-Y', '-rJ', '-rY']:
-            out = self.actl('task list', task_list_flags)
+            out = self.autolite('task list', task_list_flags)
 
             if '-J' in task_list_flags or '-Y' in task_list_flags:
                 tasks_dict = json.loads(out) if '-J' in task_list_flags else yaml.load(out)
@@ -153,11 +153,11 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
         self.assertNotEqual(self.read_task(self.taskName).schedule, 'continuous')
 
         with self.assertRaises(SystemExit):
-            self.actl('task set missing schedule --continuous')
+            self.autolite('task set missing schedule --continuous')
 
         for attr in ('command', 'setup', 'teardown', 'parent'):
             with self.assertRaises(SystemExit):
-                self.actl('task set missing', attr, 'x')
+                self.autolite('task set missing', attr, 'x')
 
 
 class TestTaskState(ActlTestTask, unittest.TestCase):
@@ -171,20 +171,20 @@ class TestTaskState(ActlTestTask, unittest.TestCase):
         db.update('tasks', name=self.taskName, state='failed')
         self.assertEqual(self.read_task(self.taskName).state, 'failed')
 
-        self.actl('task reset', self.taskName)
+        self.autolite('task reset', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
         with verbosity_context(level=1):
-            self.assertIn('already pending.', self.actl('task reset', self.taskName))
+            self.assertIn('already pending.', self.autolite('task reset', self.taskName))
 
     def test_task_reset_negative(self):
         db.update('tasks', name=self.taskName, state='running')
         self.assertEqual(self.read_task(self.taskName).state, 'running')
 
         with self.assertRaises(SystemExit):
-            self.actl('task reset', self.taskName)
+            self.autolite('task reset', self.taskName)
 
-        self.actl('task reset --force', self.taskName)
+        self.autolite('task reset --force', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
 
@@ -192,7 +192,7 @@ class ActlTestSystem(ActlTest):
 
     def setUp(self):
         self._systemName = 's1'
-        self.actl('system create', self.systemName)
+        self.autolite('system create', self.systemName)
         self.read_system(name=self.systemName)
 
     @property
@@ -200,11 +200,11 @@ class ActlTestSystem(ActlTest):
         return self._systemName
 
     def read_system(self, name: str) -> AttrDict:
-        task_str = self.actl('system read ' + name)
+        task_str = self.autolite('system read ' + name)
         return AttrDict(yaml.load(task_str.replace(', ', '\n')))
 
     def tearDown(self):
-        self.actl('system delete', self.systemName)
+        self.autolite('system delete', self.systemName)
 
         with self.assertRaises(SystemExit):
             self.read_system(self.systemName)
@@ -214,15 +214,15 @@ class TestSystemCRUD(ActlTestSystem, unittest.TestCase):
 
     def test_system_crud_positive(self):
         for exe in 'installer | cleaner | monitor | config'.split(' | '):
-            self.actl('system set', self.systemName, exe, 'echo')
+            self.autolite('system set', self.systemName, exe, 'echo')
             self.assertEqual(getattr(self.read_system(self.systemName), exe), 'echo')
-            self.actl('system', exe.replace('er', ''), self.systemName)
+            self.autolite('system', exe.replace('er', ''), self.systemName)
 
-        self.actl('system set', self.systemName, 'ip', 'localhost')
+        self.autolite('system set', self.systemName, 'ip', 'localhost')
         self.assertEqual(self.read_system(self.systemName).ip, 'localhost')
 
         for system_list_flags in ['', '-l', '-J', '-Y']:
-            out = self.actl('system list', system_list_flags)
+            out = self.autolite('system list', system_list_flags)
 
             if '-J' in system_list_flags or '-Y' in system_list_flags:
                 tasks_dict = json.loads(out) if '-J' in system_list_flags else yaml.load(out)
@@ -230,42 +230,42 @@ class TestSystemCRUD(ActlTestSystem, unittest.TestCase):
 
     def test_system_crud_negative(self):
         with self.assertRaises(SystemExit):
-            self.actl('system create', self.systemName)
+            self.autolite('system create', self.systemName)
 
         with self.assertRaises(SystemExit):
             self.read_system('missing')
 
         with self.assertRaises(SystemExit):
-            self.actl('system set missing ip bla')
+            self.autolite('system set missing ip bla')
 
         for exe in 'installer | cleaner | monitor | config'.split(' | '):
             with self.assertRaises(SystemExit):
-                self.actl('system set missing', exe, 'x')
+                self.autolite('system set missing', exe, 'x')
 
 
 class TestSystemState(ActlTestSystem, unittest.TestCase):
 
     def test_system_state_positive(self):
-        self.actl('system acquire', self.systemName)
+        self.autolite('system acquire', self.systemName)
         self.assertEqual(self.read_system(self.systemName).user, getpass.getuser())
 
-        self.assertIn('You have already acquired', self.actl('system acquire', self.systemName))
+        self.assertIn('You have already acquired', self.autolite('system acquire', self.systemName))
 
-        self.actl('system release', self.systemName)
+        self.autolite('system release', self.systemName)
         self.assertEqual(db.read(table='systems', name=self.systemName).user, '')
 
-        self.assertIn('already free', self.actl('system release', self.systemName))
+        self.assertIn('already free', self.autolite('system release', self.systemName))
 
     def test_system_state_negative(self):
         db.update(table='systems', name=self.systemName, user='bla')
 
         with self.assertRaises(SystemExit):
-            self.actl('system acquire', self.systemName)
+            self.autolite('system acquire', self.systemName)
 
         with self.assertRaises(SystemExit):
-            self.actl('system release', self.systemName)
+            self.autolite('system release', self.systemName)
 
-        self.actl('system release --force', self.systemName)
+        self.autolite('system release --force', self.systemName)
         self.assertEqual(db.read(table='systems', name=self.systemName).user, '')
 
 
@@ -273,7 +273,7 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
 
     def setUp(self):
         super(TestCronJob, self).setUp()
-        self.actl('task set', self.taskName, 'schedule --continuous')
+        self.autolite('task set', self.taskName, 'schedule --continuous')
         self._v = '-{}'.format('v' * max(get_verbosity_level(), 1))
 
     def test_cron_job_positive(self):
@@ -286,20 +286,20 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
         self.crontab_job(self._v, '--interval 0.5')
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-        self.actl('task set', self.taskName, 'schedule --daily')
+        self.autolite('task set', self.taskName, 'schedule --daily')
         db.update('tasks', name=self.taskName, last='0')
         self.crontab_job(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-        self.actl('task set', self.taskName, 'schedule --continuous')
+        self.autolite('task set', self.taskName, 'schedule --continuous')
         self.assertEqual(self.read_task(self.taskName).schedule, 'continuous')
 
     def test_cron_job_failure(self):
-        self.actl('task set', self.taskName, 'command false')
+        self.autolite('task set', self.taskName, 'command false')
         self.crontab_job(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'failed')
 
-        self.actl('task reset', self.taskName)
+        self.autolite('task reset', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
     def test_cron_job_timeout(self):
@@ -309,7 +309,7 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
         self.crontab_job(self._v, '--timeout 0.1')
         self.assertEqual(self.read_task(self.taskName).state, 'failed')
 
-        self.actl('task reset', self.taskName)
+        self.autolite('task reset', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
     def test_cron_job_notify(self):

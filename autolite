@@ -6,23 +6,23 @@ __doc__ = '''
 autolite control tool.
 
 Usage:
-    actl task list [-l | -J | -Y] [-r]
-    actl task create <name> ({sched_flags})
+    autolite task list [-l | -J | -Y] [-r]
+    autolite task create <name> ({sched_flags})
                      [--command=<exe>] [--setup=<exe>] [--teardown=<exe>]
-    actl (task | system) (read | delete) <name>
-    actl task set <name> schedule ({sched_flags})
-    actl task set <name> (setup | command | teardown) <exe>
-    actl task set <name> parent <parent>
-    actl task set <name> email <email>
-    actl task reset <name> [--force]
-    actl system list [-l | -J | -Y]
-    actl system create <name> [--ip <ip>]
+    autolite (task | system) (read | delete) <name>
+    autolite task set <name> schedule ({sched_flags})
+    autolite task set <name> (setup | command | teardown) <exe>
+    autolite task set <name> parent <parent>
+    autolite task set <name> email <email>
+    autolite task reset <name> [--force]
+    autolite system list [-l | -J | -Y]
+    autolite system create <name> [--ip <ip>]
                      [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
-    actl system set <name> ip <ip>
-    actl system set <name> (installer | cleaner | monitor | config) <exe>
-    actl system (acquire | install | clean | monitor | config) <name>
-    actl system release <name> [--force]
-    actl test [-- <arg>...]
+    autolite system set <name> ip <ip>
+    autolite system set <name> (installer | cleaner | monitor | config) <exe>
+    autolite system (acquire | install | clean | monitor | config) <name>
+    autolite system release <name> [--force]
+    autolite test [-- <arg>...]
 
 Options:
     -h --help               Show this screen.
@@ -53,31 +53,31 @@ import sys
 
 import db
 import consts
-import actl_task
-import actl_system
+import autolite_task
+import autolite_system
 from verbosity import set_verbosity, get_verbosity_level
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
 
 
-def actl(arguments):
+def autolite(arguments):
     db.init()
 
     if arguments['task']:
-        actl_task.menu(arguments)
+        autolite_task.menu(arguments)
 
     elif arguments['system']:
-        actl_system.menu(arguments)
+        autolite_system.menu(arguments)
 
     elif arguments['test']:
-        os.system('./actl_test ' +
+        os.system('./autolite_test ' +
                   '-{} '.format('v' * max(get_verbosity_level(), 1)) +
                   ' '.join(arg for arg in arguments['<arg>'] if arg != '--'))
 
 
 def _verbosity_flags(doc: str) -> str:
     return '\n'.join(
-        (d + ' [-v | -vv]') if d.lstrip().startswith('actl ') else d
+        (d + ' [-v | -vv]') if d.lstrip().startswith('autolite ') else d
         for d in doc.split('\n')
     )
 
@@ -93,4 +93,4 @@ if __name__ == '__main__':
     if get_verbosity_level() > 1:
         print(arguments)
 
-    sys.exit(actl(arguments))
+    sys.exit(autolite(arguments))
