@@ -3,7 +3,7 @@
 autolite crontab job.
 
 Usage:
-    crontab_job [--timeout=<sec>] [--interval=<sec>] [-v | -vv | -vvv]
+    runner [--timeout=<sec>] [--interval=<sec>] [-v | -vv | -vvv]
 
 Options:
     -h --help               Show this screen.

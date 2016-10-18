@@ -34,7 +34,7 @@ from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_con
 
 
 autolite = imp.load_source('autolite', './autolite')
-crontab_job = imp.load_source('crontab_job', './crontab_job')
+runner = imp.load_source('runner', './runner')
 
 
 class ActlTest(object):
@@ -89,12 +89,13 @@ class ActlTest(object):
         verbose(3, 'autolite', ' '.join(cli), '->\n', '\r' + result[:-1])
         return result
 
-    def crontab_job(self, *cli) -> str:
-        with redirected_stdout_context('crontab_job', *cli) as buf:
-            crontab_job.main(docopt.docopt(crontab_job.__doc__))
+    def runner(self, *cli) -> str:
+        with redirected_stdout_context('runner', *cli) as buf:
+            print(runner)
+            runner.main(docopt.docopt(runner.__doc__))
             result = buf.getvalue()
 
-        verbose(3, 'crontab_job', ' '.join(cli), '->\n', '\r' + result[:-1])
+        verbose(3, 'runner', ' '.join(cli), '->\n', '\r' + result[:-1])
         return result
 
 
@@ -277,18 +278,18 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
         self._v = '-{}'.format('v' * max(get_verbosity_level(), 1))
 
     def test_cron_job_positive(self):
-        self.crontab_job(self._v)
+        self.runner(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-        self.crontab_job(self._v, '--timeout 60')
+        self.runner(self._v, '--timeout 60')
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-        self.crontab_job(self._v, '--interval 0.5')
+        self.runner(self._v, '--interval 0.5')
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
         self.autolite('task set', self.taskName, 'schedule --daily')
         db.update('tasks', name=self.taskName, last='0')
-        self.crontab_job(self._v)
+        self.runner(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
         self.autolite('task set', self.taskName, 'schedule --continuous')
@@ -296,7 +297,7 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
 
     def test_cron_job_failure(self):
         self.autolite('task set', self.taskName, 'command false')
-        self.crontab_job(self._v)
+        self.runner(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'failed')
 
         self.autolite('task reset', self.taskName)
@@ -306,7 +307,7 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
         db.update('tasks', name=self.taskName, command='sleep 0.5')
         self.assertEqual(self.read_task(self.taskName).command, 'sleep 0.5')
 
-        self.crontab_job(self._v, '--timeout 0.1')
+        self.runner(self._v, '--timeout 0.1')
         self.assertEqual(self.read_task(self.taskName).state, 'failed')
 
         self.autolite('task reset', self.taskName)
@@ -321,7 +322,7 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
                           ' (at settings-user.yaml, based on settings-default.yaml)')
 
         db.update('tasks', name=self.taskName, email=email_settings.username)
-        self.crontab_job(self._v)
+        self.runner(self._v)
 
         from task import Task
         Task(name=self.taskName).notify()
@@ -361,15 +362,15 @@ if __name__ == '__main__':
     arguments = docopt.docopt(__doc__)
     set_verbosity(arguments['--verbose'])
 
-    runner_factory = TestLister if arguments['--list'] else unittest.TextTestRunner
-    runner = runner_factory(
+    suite_runner_factory = TestLister if arguments['--list'] else unittest.TextTestRunner
+    suite_runner = suite_runner_factory(
         stream=sys.stdout,
         verbosity=get_verbosity_level(),
         failfast=not arguments['--resume'],
     )
 
     if arguments['<filter>'] is None:
-        runner.run(suite(ALL_TEST_CASES))
+        suite_runner.run(suite(ALL_TEST_CASES))
 
     else:
         matched_cases = [test_case for test_case in ALL_TEST_CASES
@@ -377,7 +378,7 @@ if __name__ == '__main__':
 
         if matched_cases:
             verbose(1, 'matched cases:', [t.__name__ for t in matched_cases])
-            runner.run(suite(matched_cases))
+            suite_runner.run(suite(matched_cases))
 
         else:
             verbose(0, 'Warning! no test cases matched for:', arguments['<filter>'])

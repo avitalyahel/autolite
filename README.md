@@ -44,9 +44,9 @@ $ install
 `$ crontab -e`
 
 ```
-* * * * * $AUTOLITE_DIR/crontab_job >/dev/null 2>&1
+* * * * * $AUTOLITE_DIR/runner >/dev/null 2>&1
 ```
-This shall execute `autolite/crontab_job` every minute, and let **autolite** manage scheduling & notifications.
+This shall execute `autolite/runner` every minute, and let **autolite** manage scheduling & notifications.
 
 ## Usage: the CLI
 
