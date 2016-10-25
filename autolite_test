@@ -270,14 +270,14 @@ class TestSystemState(ActlTestSystem, unittest.TestCase):
         self.assertEqual(db.read(table='systems', name=self.systemName).user, '')
 
 
-class TestCronJob(ActlTestTask, unittest.TestCase):
+class TestRunner(ActlTestTask, unittest.TestCase):
 
     def setUp(self):
-        super(TestCronJob, self).setUp()
+        super(TestRunner, self).setUp()
         self.autolite('task set', self.taskName, 'schedule --continuous')
         self._v = '-{}'.format('v' * max(get_verbosity_level(), 1))
 
-    def test_cron_job_positive(self):
+    def test_runner_positive(self):
         self.runner(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
@@ -295,7 +295,7 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
         self.autolite('task set', self.taskName, 'schedule --continuous')
         self.assertEqual(self.read_task(self.taskName).schedule, 'continuous')
 
-    def test_cron_job_failure(self):
+    def test_runner_failure(self):
         self.autolite('task set', self.taskName, 'command false')
         self.runner(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'failed')
@@ -303,7 +303,7 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
         self.autolite('task reset', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-    def test_cron_job_timeout(self):
+    def test_runner_timeout(self):
         db.update('tasks', name=self.taskName, command='sleep 0.5')
         self.assertEqual(self.read_task(self.taskName).command, 'sleep 0.5')
 
@@ -313,7 +313,7 @@ class TestCronJob(ActlTestTask, unittest.TestCase):
         self.autolite('task reset', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-    def test_cron_job_notify(self):
+    def test_runner_notify(self):
         import settings
         email_settings = settings.read().email
 
@@ -354,7 +354,7 @@ ALL_TEST_CASES = (
     TestTaskState,
     TestSystemCRUD,
     TestSystemState,
-    TestCronJob,
+    TestRunner,
 )
 
 
