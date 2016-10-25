@@ -131,11 +131,8 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
         self.autolite('task set', self.taskName, 'command ls')
         self.assertEqual(self.read_task(self.taskName).command, 'ls')
 
-        self.autolite('task set', self.taskName, 'setup echo')
-        self.assertEqual(self.read_task(self.taskName).setup, 'echo')
-
-        self.autolite('task set', self.taskName, 'teardown ssh')
-        self.assertEqual(self.read_task(self.taskName).teardown, 'ssh')
+        self.autolite('task set', self.taskName, 'condition true')
+        self.assertEqual(self.read_task(self.taskName).condition, True)
 
         self.autolite('task set', self.taskName, 'parent Dad')
         self.assertEqual(self.read_task(self.taskName).parent, 'Dad')
@@ -156,7 +153,7 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.autolite('task set missing schedule --continuous')
 
-        for attr in ('command', 'setup', 'teardown', 'parent'):
+        for attr in ('command', 'condition', 'parent'):
             with self.assertRaises(SystemExit):
                 self.autolite('task set missing', attr, 'x')
 
@@ -326,6 +323,20 @@ class TestRunner(ActlTestTask, unittest.TestCase):
 
         from task import Task
         Task(name=self.taskName).notify()
+
+    def test_runner_condition(self):
+        for condition in [True, False]:
+            task = self.read_task(self.taskName)
+            task_last = task.last if 'last' in task else ''
+            db.update('tasks', name=self.taskName, condition=str(condition).lower(), command='sleep 0.5')
+            self.runner(self._v)
+            lasts = (self.read_task(self.taskName).last, task_last)
+
+            if condition:
+                self.assertNotEqual(*lasts)
+
+            else:
+                self.assertEqual(*lasts)
 
 
 def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:

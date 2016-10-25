@@ -8,10 +8,10 @@ autolite control tool.
 Usage:
     autolite task list [-l | -J | -Y] [-r]
     autolite task create <name> ({sched_flags})
-                     [--command=<exe>] [--setup=<exe>] [--teardown=<exe>]
+                     [--command=<exe>] [--condition=<exe>]
     autolite (task | system) (read | delete) <name>
     autolite task set <name> schedule ({sched_flags})
-    autolite task set <name> (setup | command | teardown) <exe>
+    autolite task set <name> (condition | command) <exe>
     autolite task set <name> parent <parent>
     autolite task set <name> email <email>
     autolite task reset <name> [--force]
@@ -35,8 +35,7 @@ Options:
     --force                 Force the command.
 {sched_opts}
     --command <exe>         Task command executable.
-    --setup <exe>           Task setup executable (returns bool).
-    --teardown <exe>        Task teardown executable.
+    --condition <exe>       Task condition executable (returns true|false).
     --installer <exe>       System installation executable.
     --cleaner <exe>         System cleaning executable.
     --monitor <exe>         System monitoring executable.

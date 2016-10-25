@@ -47,9 +47,8 @@ def _task_create_kwargs(arguments):
     result = dict(
         name=arguments['<name>'],
         state='pending',
-        setup=arguments['--setup'],
         command=arguments['--command'],
-        teardown=arguments['--teardown'],
+        condition=arguments['--condition'],
     )
 
     result.update(_task_sched_kwargs(arguments))
@@ -142,7 +141,7 @@ def task_set(arguments):
     else:
         kwargs = dict(
             (field, arguments['<exe>'])
-            for field in ['setup', 'command', 'teardown']
+            for field in ['condition', 'command']
             if arguments[field]
         )
 

@@ -2,6 +2,7 @@ import yaml
 from datetime import datetime
 from contextlib import contextmanager
 
+import os
 import db
 import mail
 import settings
@@ -66,7 +67,11 @@ class Task(Entity):
 
     @property
     def ready(self) -> bool:
-        return self.continuous or self.daily and str(datetime.now().date()) > self._db_record.last
+        return self.pending and (self.continuous or self.daily and str(datetime.now().date()) > self._db_record.last)
+
+    @property
+    def condition(self) -> bool:
+        return not self._db_record.condition or not os.system(self._db_record.condition)
 
     @property
     def pending(self) -> bool:
