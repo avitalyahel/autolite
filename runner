@@ -29,10 +29,9 @@ def main(arguments):
     db.init(drop=False)
 
     timeout = float(arguments['--timeout'])
+    interval = float(arguments['--interval'])
 
     try:
-        interval = float(arguments['--interval'])
-
         while True:
             for task in Task.list(state='pending'):
                 if task.ready:
@@ -49,8 +48,7 @@ def main(arguments):
 
             else:
                 verbose(1, running, 'running tasks, sleeping', interval, 'secs...')
-
-            sleep(interval)
+                sleep(interval)
 
     except Exception as exc:
         if arguments['--verbose'] > 2:
