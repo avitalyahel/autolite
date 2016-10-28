@@ -7,6 +7,7 @@ import consts
 import schema
 import common
 from task import Task
+from common import AttrDict
 from verbosity import verbose
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
@@ -81,7 +82,7 @@ def task_lineage(arguments):
             stack[-1] += [task.__dict__]
 
         else:
-            _print_subtask(arguments, task, level)
+            _print_subtask(arguments, AttrDict(task.__dict__), level)
 
     if arguments['--YAML']:
         common.dump(tasks, fmt='YAML')

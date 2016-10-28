@@ -7,7 +7,6 @@ import db
 import mail
 import settings
 from entity import Entity
-from common import AttrDict
 from verbosity import verbose
 
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
