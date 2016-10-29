@@ -31,7 +31,7 @@ Options:
     -l --long               Table list long format.
     -J --JSON               List with JSON format.
     -Y --YAML               List with YAML format.
-    -r --recursive          Task recursive listing, by lineage.
+    -r --recursive          Task recursive listing, by lineage, including subtask state summary.
     --force                 Force the command.
 {sched_opts}
     --command <exe>         Task command executable.
