@@ -1,12 +1,12 @@
 import sys
-import yaml
-import json
+from collections import Counter
 
 import db
 import consts
 import schema
 import common
 from task import Task
+from common import AttrDict
 from verbosity import verbose
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
@@ -16,7 +16,11 @@ PACKAGE_NAME = SELF_SUB_DIR
 def menu(arguments):
     if arguments['list']:
         if arguments['--recursive']:
-            task_lineage(arguments)
+            if any(arguments[flag] for flag in ['--YAML', '--JSON']):
+                common.dump(_task_lineage_dicts(), fmt='YAML' if arguments['--YAML'] else 'JSON')
+
+            else:
+                _print_task_lineage(_task_lineage_dicts(), long=arguments['--long'])
 
         else:
             task_list(arguments)
@@ -47,9 +51,8 @@ def _task_create_kwargs(arguments):
     result = dict(
         name=arguments['<name>'],
         state='pending',
-        setup=arguments['--setup'],
         command=arguments['--command'],
-        teardown=arguments['--teardown'],
+        condition=arguments['--condition'],
     )
 
     result.update(_task_sched_kwargs(arguments))
@@ -65,57 +68,96 @@ def _task_sched_kwargs(arguments):
     return dict()
 
 
-def task_lineage(arguments):
+def _task_lineage_dicts() -> [dict]:
     tasks = []
     stack = [tasks]
 
+    def _push_subtasks():
+        last_task = stack[-1][-1]
+        last_task['~subtasks'] = []
+        stack.append(last_task['~subtasks'])
+
+    def _pop_subtasks():
+        stack.pop()
+        last_task = stack[-1][-1]
+
+        if '~subtasks' in last_task:
+            last_task['~summary'] = _state_summary_dict(last_task['~subtasks'])
+
     for task, level in Task.walkIter(parent=''):
-        if any(arguments[flag] for flag in ['--YAML', '--JSON']):
-            while level > len(stack) - 1:
-                last_dict = stack[-1][-1]
-                last_dict['~subtasks'] = []
-                stack.append(last_dict['~subtasks'])
+        while level > len(stack) - 1:
+            _push_subtasks()
 
-            while level < len(stack) - 1:
-                stack.pop()
+        while level < len(stack) - 1:
+            _pop_subtasks()
 
-            stack[-1] += [task.__dict__]
+        stack[-1] += [task.__dict__]
 
-        else:
-            _print_subtask(arguments, task, level)
+    while 0 < len(stack) - 1:
+        _pop_subtasks()
 
-    if arguments['--YAML']:
-        common.dump(tasks, fmt='YAML')
-
-    elif arguments['--JSON']:
-        common.dump(tasks, fmt='JSON')
+    return tasks
 
 
-def _print_subtask(arguments, task, level):
-    tabs = (' ' * 4 * level)
+def _state_summary_dict(tasks: [dict]) -> dict:
+    summary = Counter(dict(total=len(tasks)))
+
+    for task in tasks:
+        summary[task['state']] += 1
+
+        if '~summary' in task:
+            summary += Counter(task['~summary'])
+
+    return dict(summary)
+
+
+def _print_task_lineage(tasks: [dict], long: bool, level: int = 0):
+    for task in tasks:
+        _print_subtask(task, long, level)
+
+        if '~subtasks' in task:
+            _print_task_lineage(task['~subtasks'], long, level + 1)
+
+
+def _print_subtask(task, long, indent):
+    task = AttrDict(task)
+    tabs = '  ' * indent
     print(tabs, end='')
 
-    if arguments['--long']:
-        print(tabs + task.name, ', '.join('{}: {}'.format(k, v) for k, v in task.items() if v and k != 'name'))
+    if long:
+        print(task.name, ', '.join('{}: {}'.format(k, v) for k, v in task.items()
+                                   if v and k != 'name' and k[0] != '~'),
+              end='')
 
     else:
-        print(tabs + '{}: {}'.format(task.name, task.state))
+        print('{}: {}'.format(task.name, task.state), end='')
+
+    if '~summary' in task:
+        print('', _subtask_summary_repr(task['~summary']))
+
+    else:
+        print()
+
+
+def _subtask_summary_repr(summary: dict) -> str:
+    return '({} subtasks: {})'.format(
+        summary['total'],
+        ', '.join('{} {}'.format(v, k)
+                  for k, v in summary.items()
+                  if k != 'total')
+    )
 
 
 def task_list(arguments):
-    if arguments['--YAML']:
-        print(yaml.dump([{t.name: t.__dict__} for t in Task.list()],
-                        default_flow_style=False))
-
-    elif arguments['--JSON']:
-        print(json.dumps([{t.name: t.__dict__} for t in Task.list()],
-                         indent=4))
+    if arguments['--YAML'] or arguments['--JSON']:
+        common.dump([{t.name: t.__dict__} for t in Task.list()],
+                    fmt='YAML' if arguments['--YAML'] else 'JSON')
 
     else:
-        task_list_table(arguments)
+        _task_list_table(arguments)
 
 
-def task_list_table(arguments):
+def _task_list_table(arguments):
     if arguments['--long']:
         col_names = db.g_table_columns.tasks.names
         rows = db.rows('tasks')
@@ -142,7 +184,7 @@ def task_set(arguments):
     else:
         kwargs = dict(
             (field, arguments['<exe>'])
-            for field in ['setup', 'command', 'teardown']
+            for field in ['condition', 'command']
             if arguments[field]
         )
 
