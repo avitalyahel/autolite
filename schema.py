@@ -1,5 +1,3 @@
-import itertools
-
 from common import AttrDict
 
 
@@ -9,12 +7,8 @@ class TableSchema(AttrDict):
         return ','.join(' '.join(kv) for kv in self.items())
 
     def __repr__(self):
-        return ', '.join(': '.join([k, v]) for k, v in self.items() if v)
-
-    def items(self):
-        return itertools.chain(
-            (('name', self.name), ) if 'name' in self else tuple(),
-            ((k, v) for k, v in super(TableSchema, self).items() if k != 'name')
+        return 'name: {}, {}'.format(
+            self.name, ', '.join(': '.join([k, v]) for k, v in self.items() if k != 'name' and v)
         )
 
     def new(self, **kwargs):
@@ -56,9 +50,8 @@ TABLE_SCHEMAS = AttrDict(
         parent='TEXT',
         schedule='TEXT',
         state='TEXT',
-        setup='TEXT',
+        condition='TEXT',
         command='TEXT',
-        teardown='TEXT',
         email='TEXT',
         last='TEXT',
     ),
