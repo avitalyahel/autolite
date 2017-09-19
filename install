@@ -13,7 +13,7 @@ function ensure_minor {
 	        if [ $? == '0' ]
 	        then
 	            sudo ln -sf `which $prog.$m` /usr/local/bin/$prog
-	            exit 0
+	            return 0
 	        fi
 	    done
 	    echo Failed locating $prog.x !

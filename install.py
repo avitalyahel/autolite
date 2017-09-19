@@ -26,10 +26,15 @@ parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", help
 parser.add_argument('--verify', dest='verify', action="store_true", help='Only verify, without installing missing packagaes')
 arguments = parser.parse_args()
 
+
 def system_out(*cmd):
     return subprocess.run(' '.join(cmd),
         shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
         ).stdout
+
+
+pip3 = system_out('which pip3').split('\n')[0]
+verbose(1, 'pip3:', pip3)
 
 
 def read_pip_list_dict() -> dict():
@@ -54,7 +59,10 @@ def install():
     for package, version in missing_iter():
         verbose(1, 'missing: {} - installing...'.format(_pip_entry(package, version)))
 
-        if os.system('pip3 install {pkg}=={ver}'.format(pkg=package, ver=version)):
+        inst_cmd = 'sudo {pip3} install {pkg}=={ver}'.format(pip3=pip3, pkg=package, ver=version)
+        verbose(1, inst_cmd)
+
+        if os.system(inst_cmd):
             verbose(1, '[!] failed installation of package: ' + _pip_entry(package, version))
             failed.update({package: version})
 
