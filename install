@@ -3,22 +3,31 @@
 function ensure_minor {
 	prog=$1
 	shift 1	
+
 	which $prog 2>1 1>/dev/null
-	if [ $? != '0' ]
+	if [ $? == '0' ]
 	then
-	    echo Missing $prog in PATH - trying to locate...
-	    for m in `seq 9 -1 1`
-	    do
-	        which $prog.$m 2>1 2>/dev/null
-	        if [ $? == '0' ]
-	        then
-	            sudo ln -sf `which $prog.$m` /usr/local/bin/$prog
-	            return 0
-	        fi
-	    done
-	    echo Failed locating $prog.x !
-	    exit 1
+		test -L /usr/local/bin/$prog
+		if [ $? != '0' ]
+		then
+			sudo ln -sf `which $prog` /usr/local/bin/$prog
+		fi
+
+	else
+		echo Missing $prog in PATH - trying to locate...
+		for m in `seq 9 -1 1`
+		do
+			which $prog.$m 2>1 2>/dev/null
+			if [ $? == '0' ]
+			then
+				sudo ln -sf `which $prog.m` /usr/local/bin/$prog
+				break
+			fi
+		done
+		echo -e "\e[31m[x]\e[0m Failed locating $prog.x !"
+		exit 1
 	fi
+
 }
 
 ensure_minor python3
