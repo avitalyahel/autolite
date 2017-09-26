@@ -1,4 +1,5 @@
 import io
+import os
 import sys
 import yaml
 import json
@@ -98,3 +99,15 @@ def dump(items: iter, fmt: str, entry=lambda item: item):
 
     else:
         raise KeyError('unsupported dump format: ' + fmt)
+
+
+@contextmanager
+def chdir_context(new_dir: str):
+    old_dir = os.getcwd()
+    os.chdir(new_dir)
+    try:
+
+        yield
+
+    finally:
+        os.chdir(old_dir)
