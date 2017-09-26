@@ -54,10 +54,10 @@ import db
 import consts
 import autolite_task
 import autolite_system
+from common import chdir_context
 from verbosity import set_verbosity, get_verbosity_level
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
-
 
 def autolite(arguments):
     db.init()
@@ -82,14 +82,19 @@ def _verbosity_flags(doc: str) -> str:
 
 
 if __name__ == '__main__':
-    from docopt import docopt
+    rc = 1
 
-    with open(os.path.join(SELF_FULL_DIR, 'version')) as ver_file:
-        arguments = docopt(_verbosity_flags(__doc__), version=ver_file.read())
+    with chdir_context(SELF_FULL_DIR):
+        from docopt import docopt
 
-    set_verbosity(arguments['--verbose'])
+        with open(os.path.join(SELF_FULL_DIR, 'version')) as ver_file:
+            arguments = docopt(_verbosity_flags(__doc__), version=ver_file.read())
 
-    if get_verbosity_level() > 1:
-        print(arguments)
+        set_verbosity(arguments['--verbose'])
 
-    sys.exit(autolite(arguments))
+        if get_verbosity_level() > 1:
+            print(arguments)
+
+        rc = autolite(arguments)
+
+    sys.exit(rc)
