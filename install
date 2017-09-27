@@ -2,7 +2,8 @@
 
 function ensure_minor {
 	prog=$1
-	shift 1	
+	install_opt=$2
+	shift 2
 
 	which $prog 2>$1 1>/dev/null
 	if [ $? == '0' ]
@@ -24,13 +25,13 @@ function ensure_minor {
 				break
 			fi
 		done
-		echo -e "\e[31m[x]\e[0m Failed locating $prog.x !"
+		echo -e "\e[31m[x]\e[0m Failed locating $prog.x! try: $install_opt"
 		exit 1
 	fi
 
 }
 
-ensure_minor python3
-ensure_minor pip3
+ensure_minor python3 "https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-local-programming-environment-on-centos-7"
+ensure_minor pip3 "sudo yum -y install python36u-pip"
 
 python3 install.py $@
