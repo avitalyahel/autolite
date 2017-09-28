@@ -5,7 +5,7 @@ function ensure_minor {
 	install_opt=$2
 	shift 2
 
-	which $prog 2>$1 1>/dev/null
+	which $prog 2>&1 1>/dev/null
 	if [ $? == '0' ]
 	then
 		test -L /usr/local/bin/$prog
@@ -30,8 +30,7 @@ function ensure_minor {
 	fi
 
 }
-
-ensure_minor python3 "https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-local-programming-environment-on-centos-7"
+&ensure_minor python3 "https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-local-programming-environment-on-centos-7"
 ensure_minor pip3 "sudo yum -y install python36u-pip"
 
 python3 install.py $@
