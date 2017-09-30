@@ -22,15 +22,16 @@ function ensure_minor {
 			if [ $? == '0' ]
 			then
 				sudo ln -sf `which $prog.$m` /usr/local/bin/$prog
-				break
+				return
 			fi
 		done
-		echo -e "\e[31m[x]\e[0m Failed locating $prog.x! try: $install_opt"
+		echo -e "\033[0;31m[x]\033[0;0m Failed locating $prog.x!\nSee: $install_opt"
 		exit 1
 	fi
 
 }
-&ensure_minor python3 "https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-local-programming-environment-on-centos-7"
+
+ensure_minor python3 "https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-local-programming-environment-on-centos-7"
 ensure_minor pip3 "sudo yum -y install python36u-pip"
 
 python3 install.py $@
