@@ -7,10 +7,6 @@ g_procs = {}
 
 
 def start(task: Task):
-    if not task.condition:
-        verbose(2, 'condition not met for:', task.name)
-        return
-
     task.start()
     g_procs.update({task.name: subprocess.Popen(task.command, shell=True, universal_newlines=True)})
     verbose(2, 'proc pool added with:', g_procs[task.name])

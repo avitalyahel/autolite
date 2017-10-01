@@ -35,7 +35,11 @@ def main(arguments):
         while True:
             for task in Task.list(state='pending'):
                 if task.ready:
-                    task_procs.start(task)
+                    if task.condition:
+                        task_procs.start(task)
+
+                    else:
+                        verbose(2, 'condition not met for:', task.name)
 
                 else:
                     verbose(2, task.name, 'is not ready.')
