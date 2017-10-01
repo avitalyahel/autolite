@@ -6,47 +6,72 @@
 
 ## Mission
 
-**Simple & to-the-point automation management.**
+**Simple and to-the-point automation management.**
 
 ## Audience
 
-**Software development groups, small or big, who favor simplicity and need scalability.**
+Software development groups, small or big, who favor simplicity and need scalability.
 
 ## Concept
 
-**Leave definitions to CLI & procedures to scripts - focus on schduling.**
+***Leave definitions to CLI & procedures to scripts - focus on schduling.***
 
 ### Terminal UI
 
-Automation definition includes: **system pool**, **tasks**, **schduling** & **notifications**. Here in **autolite**, all these are done by scripting and CLI  *<span style="color:RoyalBlue">[Future: Web UI for monitoring and launching]</span>*.
+Automation definition includes: system pool, tasks, schduling & notifications. Here in autolite, all these are done by scripting and CLI  *<span style="color:RoyalBlue">[Future: Web UI for monitoring and launching]</span>*.
 
 ### Objects: Tasks & Systems
 
-* **Task** basic attributes are: **command** (executable), **schedule** & **state** *<span style="color:RoyalBlue">[WIP: task hierarchial launch & state summary (tracking: [here](https://github.com/avitalyahel/autolite/issues/20))]</span>*.
-* **System** basic attributes are: **name**, **user** & **installer** (executable).
+* **Task** basic attributes are: Command (executable), Schedule & State.
+* **System** basic attributes are: Name, User & Installer (executable).
 
 The two are not directly connected, rather may be associated by scripts.
 
-## Installation
+## Getting Started
 
-Current method of installation is by [GitHub](http://github.com/avitalyahel/autolite):
-
-(1) Clone the packge & install:
+#### 1) Clone the packge & install from: [GitHub](http://github.com/avitalyahel/autolite)
 
 ```
-$ git clone http://github.com/avitalyahel/autolite
-$ cd autolite
-$ install
+git clone http://github.com/avitalyahel/autolite
+cd autolite
+./install
 ```
 
-(2) On Linux *<span style="color:RoyalBlue">[Future: on Win32]</span>*, add **autolite** cron job to `crontab`:
+#### 2) Set first shared Db, for multiple users
 
-`$ crontab -e`
+```
+echo "db_path: /mnt/shared/autolite.db" > settings-user.yaml
+```
+
+This shall link your clone to shared Db at `/mnt/shared/autolite.db`.
+
+#### 3) Trigger autolite's Runner automatically, one per Db. On Linux, add cron job to `crontab`:
+
+```
+crontab -e
+```
 
 ```
 * * * * * $AUTOLITE_DIR/runner >/dev/null 2>&1
 ```
+
 This shall execute `autolite/runner` every minute, and let **autolite** manage scheduling & notifications.
+
+#### 4) Define your first task:
+
+```
+autolite task create My-First-Task --continuous --commmand "echo Hello, World!"
+```
+
+Shall announce *"Hello, World!"* every minute.
+
+#### 5) Define your first system:
+
+```
+autolite system create s1 --installer "./system-install" --monitor "./system-status"
+```
+
+Shall allow: `autolite system s1 install`
 
 ## Usage: the CLI
 
@@ -108,7 +133,7 @@ The tool's configuration is done by `settings` files in YAML format:
 	
 ### Sharing the Db
 
-To share **autolite**'s Db with other users, each user need to install separately and then the Db file need to be put in a shared location, typically on the NFS. Then each user may set the `db_path` parameter to that location.
+To share **autolite**'s Db with other users, each user need to install separately and then the Db file need to be put in a shared location, typically on NFS. Then each user may set the `db_path` parameter to that path.
 
 Resetting the Db is done simply by deleting the Db file. Over NFS, permissions may be set so only selected users may delete - or modify - the Db file.
 
@@ -158,5 +183,5 @@ Options:
 
 ## Open Issues
 
-The open issues are mangaged at [GitHub/issues](https://github.com/avitalyahel/autolite/issues) as well.
+The open issues are mangaged at [GitHub/issues](https://github.com/avitalyahel/autolite/issues).
 
