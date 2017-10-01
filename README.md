@@ -73,6 +73,20 @@ autolite system create s1 --installer "./system-install" --monitor "./system-sta
 
 Shall allow: `autolite system s1 install`
 
+## Runner Logic
+
+autolite Runner normally executes in the background, applying the following algorithm:
+
+<span style="font-size: large; font-style: italic; font-family: serif">
+cron trigger: <br>
+&emsp; start every ready and able task. <br>
+&emsp; for every running task process: <br>
+&emsp; &emsp; if completed, set task status to Pass of Fail by process return code. <br>
+&emsp; &emsp; if timed-out, abort the process and Fail the task. <br>
+</span>
+
+As mentioned above, there is no reference system status; if required then implement with task condition or command.
+
 ## Usage: the CLI
 
 ### Basic Task Definition
@@ -89,6 +103,10 @@ Shall allow: `autolite system s1 install`
     CI               run-tests sanity                       continuous         pending
     $ autolite task set Full-Regression email nightly-officer@mine.com
     $ autolite task set CI email ci-officer@mine.com
+    $ autolite task set CI parent Full-Regression
+    $ autolite task list -r
+    Full-Regression: pending (1 subtasks: 1 pending)
+      CI: pending
 
 ### Basic System Definition
 
