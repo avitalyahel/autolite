@@ -163,7 +163,7 @@ def _task_list_table(arguments):
         rows = db.rows('tasks')
 
     else:
-        col_names = ['name', 'state']
+        col_names = ['name', 'state', 'schedule', 'last']
         tasks = db.list_table('tasks')
         rows = ([task[col] for col in col_names] for task in tasks)
 
