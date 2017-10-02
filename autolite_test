@@ -95,7 +95,7 @@ class ActlTest(object):
             runner.main(docopt.docopt(runner.__doc__))
             result = buf.getvalue()
 
-        verbose(3, 'runner', ' '.join(cli), '->\n', '\r' + result[:-1])
+        verbose(2, 'runner', ' '.join(cli), '->\n', '\r' + result[:-1])
         return result
 
 
@@ -124,7 +124,7 @@ class ActlTestTask(ActlTest):
 class TestTaskCRUD(ActlTestTask, unittest.TestCase):
 
     def test_task_crud_positive(self):
-        for sched in ['continuous', 'daily', 'never']:
+        for sched in ['continuous', 'hourly', 'daily', 'never']:
             self.autolite('task set', self.taskName, 'schedule --{}'.format(sched))
             self.assertEqual(self.read_task(self.taskName).schedule, sched)
 
@@ -284,10 +284,11 @@ class TestRunner(ActlTestTask, unittest.TestCase):
         self.runner(self._v, '--interval 0.5')
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-        self.autolite('task set', self.taskName, 'schedule --daily')
-        db.update('tasks', name=self.taskName, last='0')
-        self.runner(self._v)
-        self.assertEqual(self.read_task(self.taskName).state, 'pending')
+        for sched in ['daily', 'hourly']:
+            self.autolite('task set', self.taskName, 'schedule', '--' + sched)
+            db.update('tasks', name=self.taskName, last='0')
+            self.runner(self._v)
+            self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
         self.autolite('task set', self.taskName, 'schedule --continuous')
         self.assertEqual(self.read_task(self.taskName).schedule, 'continuous')

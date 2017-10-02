@@ -1,5 +1,5 @@
 import yaml
-from datetime import datetime
+from datetime import datetime, timedelta
 from contextlib import contextmanager
 
 import os
@@ -61,12 +61,28 @@ class Task(Entity):
         return self._db_record.schedule == 'daily'
 
     @property
+    def hourly(self) -> bool:
+        return self._db_record.schedule == 'hourly'
+
+    @property
     def never(self) -> bool:
         return self._db_record.schedule == 'never'
 
     @property
     def ready(self) -> bool:
-        return self.pending and (self.continuous or self.daily and str(datetime.now().date()) > self._db_record.last)
+        if not self.pending:
+            return False
+
+        elif self.continuous:
+            return True
+
+        elif self.daily:
+            return str(datetime.now().date()) > self._db_record.last
+
+        elif self.hourly:
+            now = datetime.now()
+            now_modulu_hour = now - timedelta(minutes=now.minute, seconds=now.second, microseconds=now.microsecond)
+            return str(now_modulu_hour) > self._db_record.last
 
     @property
     def condition(self) -> bool:

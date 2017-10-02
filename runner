@@ -34,15 +34,14 @@ def main(arguments):
     try:
         while True:
             for task in Task.list(state='pending'):
-                if task.ready:
-                    if task.condition:
-                        task_procs.start(task)
+                if not task.ready:
+                    verbose(2, task.name, 'not ready')
 
-                    else:
-                        verbose(2, 'condition not met for:', task.name)
+                elif not task.condition:
+                    verbose(1, task.name, 'condition not met')
 
                 else:
-                    verbose(2, task.name, 'is not ready.')
+                    task_procs.start(task)
 
             running = task_procs.serve(timeout)
 
@@ -51,7 +50,7 @@ def main(arguments):
                 break
 
             else:
-                verbose(1, running, 'running tasks, sleeping', interval, 'secs...')
+                verbose(2, running, 'running tasks, sleeping', interval, 'secs...')
                 sleep(interval)
 
     except Exception as exc:
