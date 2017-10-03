@@ -40,15 +40,22 @@ class Task(Entity):
         del cls._walkParents[-1]
 
     @property
-    def mailClient(self):
+    def mailClient(self) -> mail.Email:
         if not hasattr(self, '_mailClient'):
             email_settings = settings.read().email
-            self._mailClient = mail.Email(
-                smtp_server=email_settings.server,
-                smtp_port=email_settings.port,
-                smtp_username=email_settings.username,
-                smtp_password=email_settings.password,
-            )
+
+            try:
+                self._mailClient = mail.Email(
+                    smtp_server=email_settings.server,
+                    smtp_port=email_settings.port,
+                    smtp_username=email_settings.username,
+                    smtp_password=email_settings.password,
+                )
+
+            except Exception as exc:
+                verbose(0, 'Warning! mail client returned with error:', str(exc))
+                verbose(0, 'Notifiying to stdout.')
+                self._mailClient = mail.FakeEmail()
 
         return self._mailClient
 
@@ -135,7 +142,7 @@ class Task(Entity):
             self.mailClient.send(
                 recipients=self.email.split(','),
                 subject='autolite: ' + _subject,
-                content=yaml.dump(self.__dict__, default_flow_style=False).replace('\n', '<br/>'),
+                content=yaml.dump(self.__dict__, default_flow_style=False),
             )
 
     def delete(self):

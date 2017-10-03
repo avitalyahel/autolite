@@ -36,6 +36,8 @@ class Email(object):
         assert content, 'missing content'
         assert recipients, 'missing recipients'
 
+        content = content.replace('\n', '<br/>')
+
         if not email_from:
             email_from = self.username
 
@@ -70,6 +72,17 @@ class Email(object):
 
             except smtplib.SMTPServerDisconnected:
                 pass
+
+
+class FakeEmail(object):
+
+    def send(self, content: str, recipients: list,
+             subject: str = '', html_head: str = '', file_paths: list = [], email_from=''):
+
+        print('from:', email_from)
+        print('to:', recipients)
+        print('subjec:', subject)
+        print(content)
 
 
 if __name__ == '__main__':
