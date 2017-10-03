@@ -20,6 +20,7 @@ import db
 import consts
 import task_procs
 from task import Task
+from common import chdir_context
 from verbosity import set_verbosity, verbose, get_verbosity_level
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
@@ -63,14 +64,19 @@ def main(arguments):
 
 
 if __name__ == '__main__':
-    from docopt import docopt
+    rc = 1
 
-    with open(os.path.join(SELF_FULL_DIR, 'version')) as ver_file:
-        arguments = docopt(__doc__, version=ver_file.read())
+    with chdir_context(SELF_FULL_DIR):
+        from docopt import docopt
 
-    set_verbosity(arguments['--verbose'])
+        with open(os.path.join(SELF_FULL_DIR, 'version')) as ver_file:
+            arguments = docopt(__doc__, version=ver_file.read())
 
-    if get_verbosity_level() > 1:
-        print(arguments)
+        set_verbosity(arguments['--verbose'])
 
-    sys.exit(main(arguments))
+        if get_verbosity_level() > 1:
+            print(arguments)
+
+        rc = main(arguments)
+        
+    sys.exit(rc)
