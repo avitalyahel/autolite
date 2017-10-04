@@ -19,6 +19,7 @@ Usage:
     autolite system create <name> [--ip <ip>]
                      [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
     autolite system set <name> ip <ip>
+    autolite system set <name> comment <text>
     autolite system set <name> (installer | cleaner | monitor | config) <exe>
     autolite system (acquire | install | clean | monitor | config) <name>
     autolite system release <name> [--force]
