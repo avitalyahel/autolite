@@ -77,8 +77,12 @@ def system_set(arguments):
         if arguments[field]
     )
 
-    if not kwargs and arguments['ip']:
-        kwargs.update(ip=arguments['<ip>'])
+    if not kwargs:
+        if arguments['ip']:
+            kwargs.update(ip=arguments['<ip>'])
+
+        if arguments['comment']:
+            kwargs.update(comment=arguments['<text>'])
 
     db.update('systems', name=arguments['<name>'], **kwargs)
 

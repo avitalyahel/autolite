@@ -63,6 +63,7 @@ TABLE_SCHEMAS = AttrDict(
         monitor='TEXT',
         config='TEXT',
         user='TEXT',
+        comment='TEXT',
     ),
 )
 

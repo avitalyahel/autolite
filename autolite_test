@@ -219,6 +219,9 @@ class TestSystemCRUD(ActlTestSystem, unittest.TestCase):
         self.autolite('system set', self.systemName, 'ip', 'localhost')
         self.assertEqual(self.read_system(self.systemName).ip, 'localhost')
 
+        self.autolite('system set', self.systemName, 'comment', 'bla-bla')
+        self.assertEqual(self.read_system(self.systemName).comment, 'bla-bla')
+
         for system_list_flags in ['', '-l', '-J', '-Y']:
             out = self.autolite('system list', system_list_flags)
 
