@@ -62,7 +62,7 @@ def system_list_table(arguments):
         rows = db.rows('systems')
 
     else:
-        col_names = ['name', 'user']
+        col_names = ['name', 'user', 'comment']
         systems = db.list_table('systems')
         rows = ([task[col] for col in col_names] for task in systems)
 
