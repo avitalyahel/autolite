@@ -159,15 +159,15 @@ Resetting the Db is done simply by deleting the Db file. Over NFS, permissions m
 
 ### Full Help
 ```
-autolite control tool.
+autolite control tool. [-v | -vv]
 
 Usage:
     autolite task list [-l | -J | -Y] [-r] [-v | -vv]
-    autolite task create <name> (--daily | --continuous | --never) [-v | -vv]
-                     [--command=<exe>] [--setup=<exe>] [--teardown=<exe>]
+    autolite task create <name> (--daily | --hourly | --continuous | --never) [-v | -vv]
+                     [--command=<exe>] [--condition=<exe>]
     autolite (task | system) (read | delete) <name> [-v | -vv]
-    autolite task set <name> schedule (--daily | --continuous | --never) [-v | -vv]
-    autolite task set <name> (setup | command | teardown) <exe> [-v | -vv]
+    autolite task set <name> schedule (--daily | --hourly | --continuous | --never) [-v | -vv]
+    autolite task set <name> (condition | command) <exe> [-v | -vv]
     autolite task set <name> parent <parent> [-v | -vv]
     autolite task set <name> email <email> [-v | -vv]
     autolite task reset <name> [--force] [-v | -vv]
@@ -175,6 +175,7 @@ Usage:
     autolite system create <name> [--ip <ip>] [-v | -vv]
                      [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
     autolite system set <name> ip <ip> [-v | -vv]
+    autolite system set <name> comment <text> [-v | -vv]
     autolite system set <name> (installer | cleaner | monitor | config) <exe> [-v | -vv]
     autolite system (acquire | install | clean | monitor | config) <name> [-v | -vv]
     autolite system release <name> [--force] [-v | -vv]
@@ -187,14 +188,14 @@ Options:
     -l --long               Table list long format.
     -J --JSON               List with JSON format.
     -Y --YAML               List with YAML format.
-    -r --recursive          Task recursive listing, by lineage.
+    -r --recursive          Task recursive listing, by lineage, including subtask state summary.
     --force                 Force the command.
     -D, --daily             Set task schedule to 'daily'.
+    -H, --hourly            Set task schedule to 'hourly'.
     -C, --continuous        Set task schedule to 'continuous'.
     -N, --never             Set task schedule to 'never'.
     --command <exe>         Task command executable.
-    --setup <exe>           Task setup executable (returns bool).
-    --teardown <exe>        Task teardown executable.
+    --condition <exe>       Task condition executable (returns true|false).
     --installer <exe>       System installation executable.
     --cleaner <exe>         System cleaning executable.
     --monitor <exe>         System monitoring executable.
