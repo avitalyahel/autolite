@@ -140,9 +140,14 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
         for task_list_flags in ['', '-l', '-r', '-lr', '-J', '-Y', '-rJ', '-rY']:
             out = self.autolite('task list', task_list_flags)
 
-            if '-J' in task_list_flags or '-Y' in task_list_flags:
-                tasks_dict = json.loads(out) if '-J' in task_list_flags else yaml.load(out)
-                self.assertIn(self.taskName, tasks_dict[0])
+            if get_verbosity_level() > 2:
+                out = '\n'.join(out.split('\n')[1:])
+
+            if task_list_flags == '-J':
+                self.assertIn(self.taskName, json.loads(out)[0])
+
+            elif task_list_flags == '-Y':
+                self.assertIn(self.taskName, yaml.load(out)[0])
 
     def test_task_crud_negative(self):
         with self.assertRaises(SystemExit):
