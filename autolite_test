@@ -225,9 +225,14 @@ class TestSystemCRUD(ActlTestSystem, unittest.TestCase):
         for system_list_flags in ['', '-l', '-J', '-Y']:
             out = self.autolite('system list', system_list_flags)
 
-            if '-J' in system_list_flags or '-Y' in system_list_flags:
-                tasks_dict = json.loads(out) if '-J' in system_list_flags else yaml.load(out)
-                self.assertIn(self.systemName, tasks_dict[0])
+            if get_verbosity_level() > 2:
+                out = '\n'.join(out.split('\n')[1:])
+
+            if system_list_flags == '-J':
+                self.assertIn(self.systemName, json.loads(out)[0])
+
+            elif system_list_flags == '-Y':
+                self.assertIn(self.systemName, yaml.load(out)[0])
 
     def test_system_crud_negative(self):
         with self.assertRaises(SystemExit):
