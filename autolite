@@ -15,7 +15,7 @@ Usage:
     autolite task set <name> parent <parent>
     autolite task set <name> email <email>
     autolite task reset <name> [--force]
-    autolite system list [-l | -J | -Y]
+    autolite system list [-1 | -l | -J | -Y]
     autolite system create <name> [--ip <ip>]
                      [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
     autolite system set <name> ip <ip>
@@ -30,6 +30,7 @@ Options:
     --version               Show version.
     -v --verbose            Higher verbosity messages.
     -l --long               Table list long format.
+    -1 --col-1              Table list main column only.
     -J --JSON               List with JSON format.
     -Y --YAML               List with YAML format.
     -r --recursive          Task recursive listing, by lineage, including subtask state summary.
