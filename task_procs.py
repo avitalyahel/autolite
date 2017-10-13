@@ -8,7 +8,7 @@ g_procs = {}
 
 def start(task: Task):
     task.start()
-    g_procs.update({task.name: subprocess.Popen(task.command, shell=True, universal_newlines=True)})
+    g_procs.update({task.name: subprocess.Popen(task.command + ' task="{}"'.format(task.name), shell=True, universal_newlines=True)})
     verbose(2, 'proc pool added with:', g_procs[task.name])
 
 
