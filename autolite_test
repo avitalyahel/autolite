@@ -138,16 +138,17 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
         self.assertEqual(self.read_task(self.taskName).parent, 'Dad')
 
         for task_list_flags in ['', '-l', '-r', '-lr', '-J', '-Y', '-rJ', '-rY']:
-            out = self.autolite('task list', task_list_flags)
+            for name in ['', self.taskName]:
+                out = self.autolite('task list', name, task_list_flags)
 
-            if get_verbosity_level() > 2:
-                out = '\n'.join(out.split('\n')[1:])
+                if get_verbosity_level() > 2:
+                    out = '\n'.join(out.split('\n')[1:])
 
-            if task_list_flags == '-J':
-                self.assertIn(self.taskName, json.loads(out)[0])
+                if task_list_flags == '-J':
+                    self.assertIn(self.taskName, json.loads(out)[0])
 
-            elif task_list_flags == '-Y':
-                self.assertIn(self.taskName, yaml.load(out)[0])
+                elif task_list_flags == '-Y':
+                    self.assertIn(self.taskName, yaml.load(out)[0])
 
     def test_task_crud_negative(self):
         with self.assertRaises(SystemExit):
@@ -327,8 +328,8 @@ class TestRunner(ActlTestTask, unittest.TestCase):
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
     def test_runner_timeout(self):
-        db.update('tasks', name=self.taskName, command='sleep 0.5')
-        self.assertEqual(self.read_task(self.taskName).command, 'sleep 0.5')
+        db.update('tasks', name=self.taskName, command='sleep 0.3')
+        self.assertEqual(self.read_task(self.taskName).command, 'sleep 0.3')
 
         self.runner(self._v, '--timeout 0.1')
         self.assertEqual(self.read_task(self.taskName).state, 'failed')

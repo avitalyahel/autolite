@@ -11,11 +11,8 @@ PACKAGE_NAME = SELF_SUB_DIR
 
 def menu(arguments):
     if arguments['list']:
-        if arguments['--YAML']:
-            common.dump(System.list(), fmt='YAML', entry=lambda item: {item.name: item.__dict__})
-
-        elif arguments['--JSON']:
-            common.dump(System.list(), fmt='JSON', entry=lambda item: {item.name: item.__dict__})
+        if arguments['--YAML'] or arguments['--JSON']:
+            common.dump(System.list(), toyaml=arguments['--YAML'], tojson=arguments['--JSON'], entry=lambda item: {item.name: item.__dict__})
 
         else:
             system_list_table(arguments)

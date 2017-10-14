@@ -90,15 +90,12 @@ def active_user_name() -> str:
     return getpass.getuser()
 
 
-def dump(items: iter, fmt: str, entry=lambda item: item):
-    if fmt == 'YAML':
+def dump(items: iter, toyaml: bool = False, tojson: bool = False, entry=lambda item: item):
+    if toyaml:
         print(yaml.dump([entry(i) for i in items], default_flow_style=False))
 
-    elif fmt == 'JSON':
+    if tojson:
         print(json.dumps([entry(i) for i in items], indent=4))
-
-    else:
-        raise KeyError('unsupported dump format: ' + fmt)
 
 
 @contextmanager
