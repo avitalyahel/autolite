@@ -7,7 +7,7 @@ autolite control tool.
 
 Usage:
     autolite task list [<name>] [-l | -J | -Y] [-r]
-    autolite task create <name> ({sched_flags})
+    autolite task create <name> ({sched_flags}) [--once]
                      [--command=<exe>] [--condition=<exe>]
     autolite (task | system) (read | delete) <name>
     autolite task set <name> schedule ({sched_flags})
@@ -35,6 +35,7 @@ Options:
     -Y --YAML               List with YAML format.
     -r --recursive          Task recursive listing, by lineage, including subtask state summary.
     --force                 Force the command.
+    --once                  Run task only once.
 {sched_opts}
     --command <exe>         Task command executable.
     --condition <exe>       Task condition executable (returns true|false).

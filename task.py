@@ -80,13 +80,16 @@ class Task(Entity):
         if not self.pending:
             return False
 
-        elif self.continuous:
+        if self._db_record.last.find('<once>') > 0:
+            return False
+
+        if self.continuous:
             return True
 
-        elif self.daily:
+        if self.daily:
             return str(datetime.now().date()) > self._db_record.last
 
-        elif self.hourly:
+        if self.hourly:
             now = datetime.now()
             now_modulu_hour = now - timedelta(minutes=now.minute, seconds=now.second, microseconds=now.microsecond)
             return str(now_modulu_hour) > self._db_record.last
@@ -111,9 +114,16 @@ class Task(Entity):
         return (datetime.now() - self.lastDT).total_seconds() > timeout
 
     def start(self):
+        assert not self._db_record.last.find('<once>') > 0, 'should not run more than once'
+
         with self.notifyStateChangeContext():
+            last = self._db_record.last
+            self._db_record.last = str(datetime.now())
+
+            if last == '<once>':
+                self._db_record.last += '<once>'
+
             self._db_record.state = 'running'
-            self._db_record.last = datetime.now()
             db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
 
     def fail(self):

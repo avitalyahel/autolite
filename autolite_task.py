@@ -55,6 +55,7 @@ def _task_create_kwargs(arguments):
         state='pending',
         command=arguments['--command'],
         condition=arguments['--condition'],
+        last='<once>' if arguments['--once'] else None,
     )
 
     result.update(_task_sched_kwargs(arguments))
