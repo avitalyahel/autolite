@@ -6,7 +6,7 @@ __doc__ = '''
 autolite control tool.
 
 Usage:
-    autolite task list [-l | -J | -Y] [-r]
+    autolite task list [<name>] [-l | -J | -Y] [-r]
     autolite task create <name> ({sched_flags})
                      [--command=<exe>] [--condition=<exe>]
     autolite (task | system) (read | delete) <name>

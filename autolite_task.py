@@ -16,11 +16,13 @@ PACKAGE_NAME = SELF_SUB_DIR
 def menu(arguments):
     if arguments['list']:
         if arguments['--recursive']:
-            if any(arguments[flag] for flag in ['--YAML', '--JSON']):
-                common.dump(_task_lineage_dicts(), fmt='YAML' if arguments['--YAML'] else 'JSON')
+            name = arguments['<name>']
+
+            if arguments['--YAML'] or arguments['--JSON']:
+                common.dump(_task_lineage_dicts(parent=name), toyaml=arguments['--YAML'], tojson=arguments['--JSON'])
 
             else:
-                _print_task_lineage(_task_lineage_dicts(), long=arguments['--long'])
+                _print_task_lineage(_task_lineage_dicts(parent=name), long=arguments['--long'])
 
         else:
             task_list(arguments)
@@ -68,7 +70,7 @@ def _task_sched_kwargs(arguments):
     return dict()
 
 
-def _task_lineage_dicts() -> [dict]:
+def _task_lineage_dicts(parent: str = '') -> [dict]:
     tasks = []
     stack = [tasks]
 
@@ -84,7 +86,7 @@ def _task_lineage_dicts() -> [dict]:
         if '~subtasks' in last_task:
             last_task['~summary'] = _state_summary_dict(last_task['~subtasks'])
 
-    for task, level in Task.walkIter(parent=''):
+    for task, level in Task.walkIter(parent=parent):
         while level > len(stack) - 1:
             _push_subtasks()
 
@@ -95,6 +97,12 @@ def _task_lineage_dicts() -> [dict]:
 
     while 0 < len(stack) - 1:
         _pop_subtasks()
+
+    if parent:
+        parent_task = Task(name=parent).__dict__
+        parent_task['~subtasks'] = tasks[:]
+        parent_task['~summary'] = _state_summary_dict(parent_task['~subtasks'])
+        tasks = [parent_task]
 
     return tasks
 
@@ -150,8 +158,7 @@ def _subtask_summary_repr(summary: dict) -> str:
 
 def task_list(arguments):
     if arguments['--YAML'] or arguments['--JSON']:
-        common.dump([{t.name: t.__dict__} for t in Task.list()],
-                    fmt='YAML' if arguments['--YAML'] else 'JSON')
+        common.dump([{t.name: t.__dict__} for t in Task.list()], toyaml=arguments['--YAML'], tojson=arguments['--JSON'])
 
     else:
         _task_list_table(arguments)
