@@ -309,8 +309,8 @@ class TestRunner(ActlTestTask, unittest.TestCase):
     def test_runner_task_arg(self):
         with open('assert-arg.py', 'w') as f:
             f.write('\n'.join([
-                'import sys',
-                'assert sys.argv[1] == "task={}"'.format(self.taskName),
+                'import os',
+                'assert os.environ["AUTOLITE_TASK_NAME"] == "{}"'.format(self.taskName),
             ]))
 
         db.update('tasks', name=self.taskName, command='python assert-arg.py')
