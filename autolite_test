@@ -79,7 +79,7 @@ class ActlTest(object):
 
             else:
                 del user_settings['db_path']
-                verbose(2, 'deleted db_path from user setttings')
+                verbose(2, 'deleted db_path from user settings')
 
     def autolite(self, *cli) -> str:
         with redirected_stdout_context('autolite', *cli) as buf:
@@ -318,6 +318,20 @@ class TestRunner(ActlTestTask, unittest.TestCase):
         self.runner(self._v)
         os.remove('assert-arg.py')
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
+
+    def test_runner_task_once(self):
+        self.autolite('task delete', self.taskName)
+        self.autolite('task create', self.taskName, '--continuous', '--once')
+        self.autolite('task set', self.taskName, 'command true')
+
+        self.runner(self._v)
+        last = self.read_task(self.taskName).last
+        self.assertIn('<once>', last)
+
+        self.runner(self._v)
+        self.assertEqual(self.read_task(self.taskName).last, last)
+
+        db.update('tasks', name=self.taskName, last='')
 
     def test_runner_task_failed(self):
         self.autolite('task set', self.taskName, 'command false')

@@ -36,7 +36,7 @@ def _empty(val):
 
 
 PYTYPES = dict(
-    INTEGER=int,
+    INT=int,
     TEXT=str,
     REAL=float,
     BLOB=bytes,
