@@ -159,7 +159,9 @@ def _subtask_summary_repr(summary: dict) -> str:
 
 def task_list(arguments):
     if arguments['--YAML'] or arguments['--JSON']:
-        common.dump([{t.name: t.__dict__} for t in Task.list()], toyaml=arguments['--YAML'], tojson=arguments['--JSON'])
+        tasks = ({t.name: t.__dict__} for t in Task.list()
+                 if not (arguments['--not-holding'] and arguments['--not-holding'] in t.resources))
+        common.dump(tasks, toyaml=arguments['--YAML'], tojson=arguments['--JSON'])
 
     else:
         _task_list_table(arguments)
@@ -167,16 +169,16 @@ def task_list(arguments):
 
 def _task_list_table(arguments):
     if arguments['--long']:
-        col_names = db.g_table_columns.tasks.names
-        rows = db.rows('tasks')
+        col_names = 'name parent schedule state command condition resources email last'.split(' ')
 
     else:
-        col_names = ['name', 'state', 'schedule', 'last']
-        tasks = db.list_table('tasks')
-        rows = ([task[col] for col in col_names] for task in tasks)
+        col_names = 'name state schedule last'.split(' ')
 
-    col_titles = [name.upper() for name in col_names]
-    common.print_table(col_titles, rows)
+    not_holding = arguments['--not-holding']
+    tasks = filter(lambda task: not (not_holding and not_holding in task.resources), db.list_table('tasks'))
+    rows = ([task[col] for col in col_names] for task in tasks)
+
+    common.print_table([name.upper() for name in col_names], rows)
 
 
 def task_set(arguments):
@@ -188,6 +190,9 @@ def task_set(arguments):
 
     elif arguments['email']:
         kwargs = dict(email=arguments['<email>'])
+
+    elif arguments['resources']:
+        kwargs = dict(resources=arguments['<resources>'])
 
     else:
         kwargs = dict(

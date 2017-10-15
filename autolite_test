@@ -82,11 +82,14 @@ class ActlTest(object):
                 verbose(2, 'deleted db_path from user settings')
 
     def autolite(self, *cli) -> str:
+        verbose(3, 'run autolite', ' '.join(cli))
+
         with redirected_stdout_context('autolite', *cli) as buf:
             autolite.autolite(docopt.docopt(autolite.__doc__))
             result = buf.getvalue()
 
-        verbose(3, 'autolite', ' '.join(cli), '->\n', '\r' + result[:-1])
+        verbose(3, 'out:\r' + result[:-1])
+
         return result
 
     def runner(self, *cli) -> str:
@@ -137,18 +140,34 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
         self.autolite('task set', self.taskName, 'parent Dad')
         self.assertEqual(self.read_task(self.taskName).parent, 'Dad')
 
-        for task_list_flags in ['', '-l', '-r', '-lr', '-J', '-Y', '-rJ', '-rY']:
-            for name in ['', self.taskName]:
-                out = self.autolite('task list', name, task_list_flags)
+        for name in ['', self.taskName]:
+            for resources in ['Mine', '']:
+                for task_list_flags in ['', '-l', '-r', '-lr', '-J', '-Y', '-rJ', '-rY']:
 
-                if get_verbosity_level() > 2:
-                    out = '\n'.join(out.split('\n')[1:])
+                    db.update('tasks', name=self.taskName, resources=resources)
 
-                if task_list_flags == '-J':
-                    self.assertIn(self.taskName, json.loads(out)[0])
+                    if resources:
+                        self.assertEqual(self.read_task(self.taskName).resources, resources)
+                        out = self.autolite('task list', name, task_list_flags, '--not-holding', resources)
 
-                elif task_list_flags == '-Y':
-                    self.assertIn(self.taskName, yaml.load(out)[0])
+                    else:
+                        out = self.autolite('task list', name, task_list_flags)
+
+                    if get_verbosity_level() > 2:
+                        out = '\n'.join(out.split('\n')[1:])
+
+                    if task_list_flags == '-J':
+                        self._assert_tasks(json.loads(out), resources)
+
+                    elif task_list_flags == '-Y':
+                        self._assert_tasks(yaml.load(out), resources)
+
+    def _assert_tasks(self, dicts: [dict], resources: str):
+        if not resources:
+            self.assertIn(self.taskName, dicts[0])
+
+        else:
+            self.assertEqual(len(dicts), 0)
 
     def test_task_crud_negative(self):
         with self.assertRaises(SystemExit):

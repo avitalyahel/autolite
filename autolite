@@ -7,17 +7,19 @@ autolite control tool.
 
 Usage:
     autolite task list [<name>] [-l | -J | -Y] [-r]
+                    [--not-holding=<resource>]
     autolite task create <name> ({sched_flags}) [--once]
-                     [--command=<exe>] [--condition=<exe>]
+                    [--command=<exe>] [--condition=<exe>]
     autolite (task | system) (read | delete) <name>
     autolite task set <name> schedule ({sched_flags})
     autolite task set <name> (condition | command) <exe>
     autolite task set <name> parent <parent>
     autolite task set <name> email <email>
+    autolite task set <name> resources <resources>
     autolite task reset <name> [--force]
     autolite system list [-1 | -l | -J | -Y]
     autolite system create <name> [--ip <ip>]
-                     [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
+                    [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
     autolite system set <name> ip <ip>
     autolite system set <name> comment <text>
     autolite system set <name> (installer | cleaner | monitor | config) <exe>
@@ -26,23 +28,24 @@ Usage:
     autolite test [-- <arg>...]
 
 Options:
-    -h --help               Show this screen.
-    --version               Show version.
-    -v --verbose            Higher verbosity messages.
-    -l --long               Table list long format.
-    -1 --col-1              Table list main column only.
-    -J --JSON               List with JSON format.
-    -Y --YAML               List with YAML format.
-    -r --recursive          Task recursive listing, by lineage, including subtask state summary.
-    --force                 Force the command.
-    --once                  Run task only once.
+    -h --help                   Show this screen.
+    --version                   Show version.
+    -v --verbose                Higher verbosity messages.
+    -l --long                   Table list long format.
+    -1 --col-1                  Table list main column only.
+    -J --JSON                   List with JSON format.
+    -Y --YAML                   List with YAML format.
+    -r --recursive              Task recursive listing, by lineage, including subtask state summary.
+    --not-holding <resource>    With task list, filter the tasks not holding specified resource.
+    --force                     Force the command.
+    --once                      Run task only once.
 {sched_opts}
-    --command <exe>         Task command executable.
-    --condition <exe>       Task condition executable (returns true|false).
-    --installer <exe>       System installation executable.
-    --cleaner <exe>         System cleaning executable.
-    --monitor <exe>         System monitoring executable.
-    --config <exe>          System configuration executable.
+    --command <exe>             Task command executable.
+    --condition <exe>           Task condition executable (returns true|false).
+    --installer <exe>           System installation executable.
+    --cleaner <exe>             System cleaning executable.
+    --monitor <exe>             System monitoring executable.
+    --config <exe>              System configuration executable.
 '''.format(
     sched_flags=' | '.join(('--' + sched) for sched in schema.SCHEDULES),
     sched_opts='\n'.join(
