@@ -159,8 +159,7 @@ def _subtask_summary_repr(summary: dict) -> str:
 
 def task_list(arguments):
     if arguments['--YAML'] or arguments['--JSON']:
-        tasks = ({t.name: t.__dict__} for t in Task.list()
-                 if not (arguments['--not-holding'] and arguments['--not-holding'] in t.resources))
+        tasks = ({t.name: t.__dict__} for t in Task.list() if not t.holdingAny(arguments['--not-holding']))
         common.dump(tasks, toyaml=arguments['--YAML'], tojson=arguments['--JSON'])
 
     else:
@@ -174,8 +173,7 @@ def _task_list_table(arguments):
     else:
         col_names = 'name state schedule last'.split(' ')
 
-    not_holding = arguments['--not-holding']
-    tasks = filter(lambda task: not (not_holding and not_holding in task.resources), db.list_table('tasks'))
+    tasks = filter(lambda task: not Task(schema=task).holdingAny(arguments['--not-holding']), db.list_table('tasks'))
     rows = ([task[col] for col in col_names] for task in tasks)
 
     common.print_table([name.upper() for name in col_names], rows)
