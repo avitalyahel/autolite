@@ -2,8 +2,9 @@
 
 function ensure_minor {
 	prog=$1
-	install_opt=$2
-	shift 2
+	shift 1
+
+	exists="true"
 
 	which $prog 2>&1 1>/dev/null
 	if [ $? == '0' ]
@@ -25,13 +26,45 @@ function ensure_minor {
 				return
 			fi
 		done
-		echo -e "\033[0;31m[x]\033[0;0m Failed locating $prog.x!\nSee: $install_opt"
-		exit 1
-	fi
 
+		echo -e "\033[0;31m[x]\033[0;0m Failed locating $prog.x!"
+		exists="false"
+	fi
 }
 
-ensure_minor python3 "https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-local-programming-environment-on-centos-7"
-ensure_minor pip3 "sudo yum -y install python36u-pip"
+function must_install_python3 {
+	install_ref=$1
+	shift 1
+
+	echo "Installation procedure:"
+	cat py3install
+	echo "Continue? (y|n)"
+	read yn
+
+	if [ "$yn" == "y" ]
+	then
+		bash -x py3install
+	else
+		echo "See: $install_ref"
+		exit 1
+	fi
+}
+
+PKG_LIST="python3 pip3"
+
+for pkg in $PKG_LIST
+do
+	ensure_minor $pkg
+	if [ "$exists" == "false" ]
+	then
+		must_install_python3 "https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-local-programming-environment-on-centos-7"
+
+		ensure_minor $pkg
+		if [ "$exists" == "false" ]
+		then
+			exit 1
+		fi
+	fi
+done
 
 python3 install.py $@
