@@ -12,6 +12,10 @@ g_db_path = ''
 g_table_columns = AttrDict()  # {tname: TableColumns()}
 
 
+def name() -> str:
+    return os.path.basename(g_db_path)
+
+
 class TableColumns(object):
 
     def __init__(self, *args, sep='|'):
