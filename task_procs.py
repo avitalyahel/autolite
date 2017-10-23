@@ -1,15 +1,27 @@
+import os
 import subprocess
 
+import db
 from task import Task
 from verbosity import verbose
 
 g_procs = {}
 
 
+LOG_ROOT = '/var/log/autolite'
+
 def start(task: Task):
     task.start()
-    g_procs.update({task.name: subprocess.Popen('AUTOLITE_TASK_NAME="{}" '.format(task.name) + task.command, shell=True, universal_newlines=True)})
-    verbose(2, 'proc pool added with:', g_procs[task.name])
+
+    log_path = os.path.join(LOG_ROOT, db.name())
+    os.makedirs(log_path, exist_ok=True)
+    logfile = open('{path}/{task_name}.log'.format(path=log_path, task_name=task.name), 'w')
+    new_task_proc = subprocess.Popen('export AUTOLITE_TASK_NAME="{}" ; '.format(task.name) + task.command, 
+                                     shell=True, universal_newlines=True, stdout=logfile, stderr=logfile)
+    new_task_proc.stdout=logfile
+
+    g_procs.update({task.name: new_task_proc})
+    verbose(2, 'proc pool added with:', new_task_proc)
 
 
 def serve(timeout: int) -> int:
@@ -33,6 +45,7 @@ def serve(timeout: int) -> int:
             completed += [task_name]
 
     for task in completed:
+        g_procs[task].stdout.close()
         del g_procs[task]
 
     return len(g_procs)
