@@ -68,7 +68,7 @@ def system_list_table(arguments):
         rows = ([task[col] for col in col_names] for task in systems)
 
     col_titles = [name.upper() for name in col_names]
-    common.print_table(col_titles, rows)
+    common.print_table(col_titles, sorted(rows, key=lambda row: row[0]))
 
 
 def system_set(arguments):
