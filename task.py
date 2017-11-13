@@ -116,6 +116,10 @@ class Task(Entity):
         return self._db_record.state == 'failed'
 
     @property
+    def running(self) -> bool:
+        return self._db_record.state == 'running'
+
+    @property
     def lastDT(self) -> datetime:
         return datetime.strptime(self._db_record.last, DATETIME_FORMAT)
 
@@ -145,8 +149,9 @@ class Task(Entity):
 
     def reset(self):
         with self.notifyStateChangeContext():
+            if not self.running:
+                self._db_record.last = ''
             self._db_record.state = 'pending'
-            self._db_record.last = ''
             db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
 
     @contextmanager
