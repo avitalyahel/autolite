@@ -29,6 +29,7 @@ import docopt
 
 import db
 import settings
+from task import Task
 from common import AttrDict, redirected_stdout_context
 from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_context
 
@@ -211,7 +212,84 @@ class TestTaskState(AutoliteTestTask, unittest.TestCase):
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
 
-class ActlTestSystem(ActlTest):
+class TestTaskInherit(AutoliteTestTask, unittest.TestCase):
+
+    def _create_child_task(self, childName: str, parentName: str):
+        self.autolite('task create', childName, '--inherit', parentName)
+
+        parent = Task(name=parentName)
+        child = Task(name=childName)
+        self.assertEqual(child.parent, parentName)
+        verbose(2, 'parent:', str(parent))
+        verbose(2, 'child:', str(child))
+        
+        return parent, child
+
+    def test_task_inherit_positive(self):
+        childName = 'child1'
+        parent, child = self._create_child_task(childName, self.taskName)
+
+        for attr in ('schedule', 'command', 'email'):
+            self.assertEqual(getattr(child, attr), getattr(parent, attr), attr)
+
+        self.autolite('task set', childName, 'command', 'bla')
+        self.assertEqual(self.read_task(childName).command, 'bla')
+        child = Task(name=childName)
+        self.assertNotEqual(child.command, parent.command)
+
+        self.autolite('task delete', childName)
+
+    def test_task_inherit_negative(self):
+        childName = 'child2'
+        parent, child = self._create_child_task(childName, self.taskName)
+
+        save_parent = child.parent
+        db.update('tasks', name=child.name, parent='')
+
+        failed_child = Task(name=childName)
+
+        with self.assertRaises(AssertionError):
+            verbose(2, 'failed child:', str(failed_child))
+
+    def test_task_inherit_complex(self):
+        self._create_heritage(
+            parent=self.taskName,
+            children=dict(
+                decendant1=dict(
+                    decendant11='decendant111',
+                    decendant12='decendant121',
+                ),
+                decendant2=dict(
+                    decendant21='decendant211',
+                    decendant22='decendant221',
+                ),
+            ),
+        )
+        self.autolite('task list -rl')
+
+        self.autolite('task set decendant1 schedule --continuous')
+        self.assertEqual(self.read_task('decendant1').schedule, 'continuous')
+        self.assertEqual(Task(name='decendant11').schedule, 'continuous')
+        self.assertEqual(Task(name='decendant121').schedule, 'continuous')
+
+        self.autolite('task set decendant21 schedule --hourly')
+        self.assertEqual(self.read_task('decendant21').schedule, 'hourly')
+        self.assertEqual(Task(name='decendant211').schedule, 'hourly')
+        self.autolite('task list -rl')
+        self.assertEqual(Task(name='decendant221').schedule, 'daily')
+
+    def _create_heritage(self, parent: str, children: dict):
+        for child, grandchild in children.items():
+            self._create_child_task(child, parent)
+
+            if isinstance(grandchild, dict):
+                self._create_heritage(child, grandchild)
+
+            else:
+                self._create_child_task(grandchild, child)
+
+
+class AutoliteTestSystem(AutoliteTest):
 
     def setUp(self):
         self._systemName = 's1'
@@ -423,6 +501,7 @@ class TestLister(object):
 ALL_TEST_CASES = (
     TestTaskCRUD,
     TestTaskState,
+    TestTaskInherit,
     TestSystemCRUD,
     TestSystemState,
     TestRunner,

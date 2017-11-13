@@ -61,6 +61,16 @@ def _task_create_kwargs(arguments):
         last='<once>' if arguments['--once'] else None,
     )
 
+    if arguments['--inherit']:
+        parent = db.read(table='tasks', name=arguments['--inherit'])
+        result.update(dict(
+            parent=parent.name,
+            schedule='<inherit>',
+            command=result.command if result.command else '<inherit>',
+            email='<inherit>',
+            condition=result.condition if result.condition else '<inherit>',
+        ))
+
     result.update(_task_sched_kwargs(arguments))
 
     return result
@@ -205,6 +215,7 @@ def task_set(arguments):
     assert kwargs, 'unexpected empty attrs to set for tasks'
 
     db.update('tasks', name=arguments['<name>'], **kwargs)
+    print(Task(arguments['<name>']))
 
 
 def task_reset(arguments):
