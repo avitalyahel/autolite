@@ -37,7 +37,7 @@ autolite = imp.load_source('autolite', './autolite')
 runner = imp.load_source('runner', './runner')
 
 
-class ActlTest(object):
+class AutoliteTest(object):
 
     @classmethod
     def setUpClass(cls):
@@ -102,7 +102,7 @@ class ActlTest(object):
         return result
 
 
-class ActlTestTask(ActlTest):
+class AutoliteTestTask(AutoliteTest):
 
     def setUp(self):
         self._taskName = 't1'
@@ -124,7 +124,7 @@ class ActlTestTask(ActlTest):
             self.read_task(self.taskName)
 
 
-class TestTaskCRUD(ActlTestTask, unittest.TestCase):
+class TestTaskCRUD(AutoliteTestTask, unittest.TestCase):
 
     def test_task_crud_positive(self):
         for sched in ['continuous', 'hourly', 'daily', 'never']:
@@ -183,7 +183,7 @@ class TestTaskCRUD(ActlTestTask, unittest.TestCase):
                 self.autolite('task set missing', attr, 'x')
 
 
-class TestTaskState(ActlTestTask, unittest.TestCase):
+class TestTaskState(AutoliteTestTask, unittest.TestCase):
 
     def test_task_state_update(self):
         for state in ['running', 'pending']:
@@ -233,7 +233,7 @@ class ActlTestSystem(ActlTest):
             self.read_system(self.systemName)
 
 
-class TestSystemCRUD(ActlTestSystem, unittest.TestCase):
+class TestSystemCRUD(AutoliteTestSystem, unittest.TestCase):
 
     def test_system_crud_positive(self):
         for exe in 'installer | cleaner | monitor | config'.split(' | '):
@@ -274,7 +274,7 @@ class TestSystemCRUD(ActlTestSystem, unittest.TestCase):
                 self.autolite('system set missing', exe, 'x')
 
 
-class TestSystemState(ActlTestSystem, unittest.TestCase):
+class TestSystemState(AutoliteTestSystem, unittest.TestCase):
 
     def test_system_state_positive(self):
         self.autolite('system acquire', self.systemName)
@@ -300,7 +300,7 @@ class TestSystemState(ActlTestSystem, unittest.TestCase):
         self.assertEqual(db.read(table='systems', name=self.systemName).user, '')
 
 
-class TestRunner(ActlTestTask, unittest.TestCase):
+class TestRunner(AutoliteTestTask, unittest.TestCase):
 
     def setUp(self):
         super(TestRunner, self).setUp()

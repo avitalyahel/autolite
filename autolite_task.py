@@ -19,7 +19,10 @@ def menu(arguments):
             name = arguments['<name>']
 
             if arguments['--YAML'] or arguments['--JSON']:
-                common.dump(_task_lineage_dicts(parent=name), toyaml=arguments['--YAML'], tojson=arguments['--JSON'])
+                common.dump(_task_lineage_dicts(parent=name), 
+                    toyaml=arguments['--YAML'], 
+                    tojson=arguments['--JSON'],
+                )
 
             else:
                 _print_task_lineage(_task_lineage_dicts(parent=name), long=arguments['--long'])
@@ -50,7 +53,7 @@ def menu(arguments):
 
 
 def _task_create_kwargs(arguments):
-    result = dict(
+    result = AttrDict(
         name=arguments['<name>'],
         state='pending',
         command=arguments['--command'],
@@ -173,7 +176,7 @@ def _task_list_table(arguments):
     else:
         col_names = 'name state schedule last'.split(' ')
 
-    tasks = filter(lambda task: not Task(schema=task).holdingAny(arguments['--not-holding']), db.list_table('tasks'))
+    tasks = filter(lambda rec: not Task(record=rec).holdingAny(arguments['--not-holding']), db.list_table('tasks'))
     rows = ([task[col] for col in col_names] for task in tasks)
 
     common.print_table([name.upper() for name in col_names], rows)

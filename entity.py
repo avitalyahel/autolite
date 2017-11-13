@@ -12,14 +12,16 @@ class MetaEntity(type):
 class Entity(metaclass=MetaEntity):
     _tableName = ''
 
-    def __init__(self, name: str = '', schema: schema.TableSchema = None):
-        assert bool(name) ^ bool(schema), 'may init with name XOR schema'
+    def __init__(self, name: str = '', record: schema.TableSchema = None):
+        assert bool(name) ^ bool(record), 'may init with name XOR record'
 
         if name:
             self._db_record = db.read(self._tableName, name=name)
 
-        elif schema:
-            self._db_record = schema
+        elif record:
+            self._db_record = record
+
+        assert isinstance(self._db_record, schema.TableSchema)
 
     def __repr__(self):
         return repr(self._db_record)
@@ -31,13 +33,17 @@ class Entity(metaclass=MetaEntity):
         except KeyError:
             return self.__getattribute__(name)
 
+    @property
+    def __dict__(self):
+        return dict(self._db_record)
+
     @classmethod
     def create(cls, **kwargs) -> object:
-        return cls(schema=db.create(cls.tableName, **kwargs))
+        return cls(record=db.create(cls.tableName, **kwargs))
 
     @classmethod
     def list(cls, **kwargs) -> tuple:
-        return (cls(schema=db_record) for db_record in db.list_table(cls.tableName, **kwargs))
+        return (cls(record=db_record) for db_record in db.list_table(cls.tableName, **kwargs))
 
     @property
     def tableName(self):
