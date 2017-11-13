@@ -24,11 +24,12 @@ class Entity(metaclass=MetaEntity):
         assert isinstance(self._db_record, schema.TableSchema)
 
     def __repr__(self):
-        return repr(self._db_record)
+        inherited = dict((k, self.inheritedAttr(k)) for k in self._db_record.keys())
+        return repr(schema.TableSchema(**inherited))
 
     def __getattr__(self, name):
         try:
-            return self._db_record[name]
+            return self.inheritedAttr(name)
 
         except KeyError:
             return self.__getattribute__(name)
@@ -49,6 +50,5 @@ class Entity(metaclass=MetaEntity):
     def tableName(self):
         return type(self).tableName
 
-    @property
-    def __dict__(self):
-        return dict(self._db_record)
+    def inheritedAttr(self, attr: str) -> object:
+        return getattr(self._db_record, attr)

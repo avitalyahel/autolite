@@ -8,8 +8,8 @@ autolite control tool.
 Usage:
     autolite task list [<name>] [-l | -J | -Y] [-r]
                     [--not-holding=<resource>]
-    autolite task create <name> ({sched_flags}) [--once]
-                    [--command=<exe>] [--condition=<exe>]
+    autolite task create <name> [{sched_flags}] [--once]
+                    [--command=<exe>] [--condition=<exe>] [--inherit=<parent>]
     autolite (task | system) (read | delete) <name>
     autolite task set <name> schedule ({sched_flags})
     autolite task set <name> (condition | command) <exe>
@@ -36,6 +36,7 @@ Options:
     -J --JSON                   List with JSON format.
     -Y --YAML                   List with YAML format.
     -r --recursive              Task recursive listing, by lineage, including subtask state summary.
+    --inherit <parent>          Set parent and reuse it's attributes.
     --not-holding <resource>    With task list, filter the tasks not holding specified resource.
     --force                     Force the command.
     --once                      Run task only once.

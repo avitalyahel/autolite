@@ -36,8 +36,19 @@ class Task(Entity):
     @contextmanager
     def walkParentsContext(cls, parent: str):
         cls._walkParents.append(parent)
+
         yield
+
         del cls._walkParents[-1]
+
+    def inheritedAttr(self, attr: str) -> object:
+        db_record = self._db_record
+
+        while getattr(db_record, attr) == '<inherit>':
+            assert db_record.parent, 'missing parent for <inherit>'
+            db_record = db.read('tasks', db_record.parent)
+
+        return getattr(db_record, attr)
 
     @property
     def mailClient(self) -> mail.Email:
@@ -105,7 +116,13 @@ class Task(Entity):
 
     @property
     def condition(self) -> bool:
-        return not self._db_record.condition or not os.system(self._db_record.condition)
+        db_record = self._db_record
+
+        if db_record.condition == '<inherit>':
+            assert db_record.parent, 'missing parent for inheritance'
+            db_record = db.read('tasks', db_record.parent)
+
+        return not db_record.condition or not os.system(db_record.condition)
 
     @property
     def pending(self) -> bool:
