@@ -146,7 +146,8 @@ class Task(Entity):
     def reset(self):
         with self.notifyStateChangeContext():
             self._db_record.state = 'pending'
-            db.update('tasks', name=self.name, state=self._db_record.state)
+            self._db_record.last = ''
+            db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
 
     @contextmanager
     def notifyStateChangeContext(self):
