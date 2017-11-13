@@ -112,18 +112,19 @@ def update(table, **kwargs):
     _assert_existing(table, kwargs['name'])
 
     record = TABLE_SCHEMAS[table].new(**kwargs)
-    sql = 'UPDATE {} SET {} WHERE name="{}"'.format(table, record.for_update(**kwargs), kwargs['name'])
+    sql = 'UPDATE {} SET {} WHERE name=\'{}\''.format(table, record.for_update(**kwargs), kwargs['name'])
     g_conn.cursor().execute(sql)
     g_conn.commit()
     verbose(2, 'updated', table[:-1], repr(record))
 
 
 def read(table, name) -> TableSchema:
-    sql = 'SELECT * FROM {} WHERE name="{}"'.format(table, name)
+    sql = 'SELECT * FROM {} WHERE name=\'{}\''.format(table, name)
+    verbose(2, 'reading:', sql)
     values = g_conn.cursor().execute(sql).fetchone()
 
     if not values:
-        raise NameError('missing in {}: {}'.format(table, name))
+        raise NameError('missing from {}: {}'.format(table, name))
 
     record = _new_schema(table, values)
     verbose(2, 'read', table[:-1], repr(record))
@@ -131,7 +132,7 @@ def read(table, name) -> TableSchema:
 
 
 def existing(table, name) -> bool:
-    sql = 'SELECT 1 FROM {} WHERE name="{}" LIMIT 1'.format(table, name)
+    sql = 'SELECT 1 FROM {} WHERE name=\'{}\' LIMIT 1'.format(table, name)
     values = g_conn.cursor().execute(sql).fetchone()
     exists = values is not None and len(values) > 0
     verbose(2, name, 'does' if exists else 'does not', 'exist')
@@ -140,7 +141,7 @@ def existing(table, name) -> bool:
 
 def _assert_existing(table, name):
     if not existing(table, name=name):
-        raise NameError('missing in {}: {}'.format(table, name))
+        raise NameError('missing from {}: {}'.format(table, name))
 
 
 def _assert_not_existing(table, name):
@@ -151,7 +152,7 @@ def _assert_not_existing(table, name):
 def delete(table, name):
     _assert_existing(table, name)
 
-    sql = 'DELETE FROM {} WHERE name="{}"'.format(table, name)
+    sql = 'DELETE FROM {} WHERE name=\'{}\''.format(table, name)
     g_conn.cursor().execute(sql)
     g_conn.commit()
     verbose(1, 'deleted', table[:-1] + ':', name)
