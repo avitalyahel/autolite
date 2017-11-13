@@ -180,7 +180,10 @@ def task_list(arguments):
 
 
 def _task_list_table(arguments):
-    if arguments['--long']:
+    if arguments['--col-1']:
+        col_names = ['name']
+
+    elif arguments['--long']:
         col_names = 'name parent schedule state command condition resources email last'.split(' ')
 
     else:
