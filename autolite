@@ -7,7 +7,7 @@ autolite control tool.
 
 Usage:
     autolite task list [<name>] [-1 | -l | -J | -Y] [-r]
-                    [--not-holding=<resource>]
+                    [--not-holding=<resource>] [--holding=<resource>]
     autolite task create <name> [{sched_flags}] [--once]
                     [--command=<exe>] [--condition=<exe>] [--inherit=<parent>]
     autolite (task | system) (read | delete) <name>
@@ -37,6 +37,7 @@ Options:
     -Y --YAML                   List with YAML format.
     -r --recursive              Task recursive listing, by lineage, including subtask state summary.
     --inherit <parent>          Set parent and reuse it's attributes.
+    --holding <resource>        With task list, filter the tasks holding specified resource.
     --not-holding <resource>    With task list, filter the tasks not holding specified resource.
     --force                     Force the command.
     --once                      Run task only once.
