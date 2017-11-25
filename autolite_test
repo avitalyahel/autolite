@@ -38,7 +38,7 @@ autolite = imp.load_source('autolite', './autolite')
 runner = imp.load_source('runner', './runner')
 
 
-class AutoliteTest(object):
+class AutoliteTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -125,7 +125,7 @@ class AutoliteTestTask(AutoliteTest):
             self.read_task(self.taskName)
 
 
-class TestTaskCRUD(AutoliteTestTask, unittest.TestCase):
+class TestTaskCRUD(AutoliteTestTask):
 
     def test_task_crud_positive(self):
         for sched in ['continuous', 'hourly', 'daily', 'never']:
@@ -164,11 +164,11 @@ class TestTaskCRUD(AutoliteTestTask, unittest.TestCase):
                         self._assert_tasks(yaml.load(out), resources)
 
     def _assert_tasks(self, dicts: [dict], resources: str):
-        if not resources:
-            self.assertIn(self.taskName, dicts[0])
+        if resources:
+            self.assertEqual(len(dicts), 0)
 
         else:
-            self.assertEqual(len(dicts), 0)
+            self.assertIn(self.taskName, dicts[0])
 
     def test_task_crud_negative(self):
         with self.assertRaises(SystemExit):
@@ -184,7 +184,7 @@ class TestTaskCRUD(AutoliteTestTask, unittest.TestCase):
                 self.autolite('task set missing', attr, 'x')
 
 
-class TestTaskState(AutoliteTestTask, unittest.TestCase):
+class TestTaskState(AutoliteTestTask):
 
     def test_task_state_update(self):
         for state in ['running', 'pending']:
@@ -212,9 +212,9 @@ class TestTaskState(AutoliteTestTask, unittest.TestCase):
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
 
-class TestTaskInherit(AutoliteTestTask, unittest.TestCase):
+class TestTaskInherit(AutoliteTestTask):
 
-    def _create_child_task(self, childName: str, parentName: str):
+    def _create_inheritor_task(self, childName: str, parentName: str):
         self.autolite('task create', childName, '--inherit', parentName)
 
         parent = Task(name=parentName)
@@ -311,7 +311,7 @@ class AutoliteTestSystem(AutoliteTest):
             self.read_system(self.systemName)
 
 
-class TestSystemCRUD(AutoliteTestSystem, unittest.TestCase):
+class TestSystemCRUD(AutoliteTestSystem):
 
     def test_system_crud_positive(self):
         for exe in 'installer | cleaner | monitor | config'.split(' | '):
@@ -352,7 +352,7 @@ class TestSystemCRUD(AutoliteTestSystem, unittest.TestCase):
                 self.autolite('system set missing', exe, 'x')
 
 
-class TestSystemState(AutoliteTestSystem, unittest.TestCase):
+class TestSystemState(AutoliteTestSystem):
 
     def test_system_state_positive(self):
         self.autolite('system acquire', self.systemName)
@@ -378,7 +378,7 @@ class TestSystemState(AutoliteTestSystem, unittest.TestCase):
         self.assertEqual(db.read(table='systems', name=self.systemName).user, '')
 
 
-class TestRunner(AutoliteTestTask, unittest.TestCase):
+class TestRunner(AutoliteTestTask):
 
     def setUp(self):
         super(TestRunner, self).setUp()
