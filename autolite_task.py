@@ -16,16 +16,7 @@ PACKAGE_NAME = SELF_SUB_DIR
 def menu(arguments):
     if arguments['list']:
         if arguments['--recursive']:
-            name = arguments['<name>']
-
-            if arguments['--YAML'] or arguments['--JSON']:
-                common.dump(_task_lineage_dicts(parent=name), 
-                    toyaml=arguments['--YAML'], 
-                    tojson=arguments['--JSON'],
-                )
-
-            else:
-                _print_task_lineage(_task_lineage_dicts(parent=name), long=arguments['--long'])
+            task_lineage(arguments)
 
         else:
             task_list(arguments)
@@ -50,6 +41,30 @@ def menu(arguments):
         except NameError as exc:
             print(PACKAGE_NAME, 'Error!', exc)
             sys.exit(1)
+
+
+def task_lineage(arguments):
+    name = arguments['<name>']
+
+    def lineage_filter(task: Task):
+        return _holdings_filter(task, arguments)
+
+    if arguments['--YAML'] or arguments['--JSON']:
+        common.dump(_task_lineage_dicts(parent=name, task_filter=lineage_filter), 
+            toyaml=arguments['--YAML'], 
+            tojson=arguments['--JSON'],
+        )
+
+    else:
+        _print_task_lineage(_task_lineage_dicts(parent=name, task_filter=lineage_filter), long=arguments['--long'])
+
+
+def _holdings_filter(task: Task, arguments: dict) -> bool:
+    if arguments['--holding'] is None and arguments['--not-holding'] is None:
+        return True
+
+    return arguments['--holding'] and task.holdingAny(arguments['--holding']) \
+        or arguments['--not-holding'] and not task.holdingAny(arguments['--not-holding'])
 
 
 def _task_create_kwargs(arguments):
@@ -84,18 +99,18 @@ def _task_sched_kwargs(arguments):
     return dict()
 
 
-def _task_lineage_dicts(parent: str = '') -> [dict]:
+def _task_lineage_dicts(parent: str = '', task_filter = lambda task: True) -> [dict]:
     tasks = []
     stack = [tasks]
 
     def _push_subtasks():
-        last_task = stack[-1][-1]
+        last_task = stack[-1][-1] if len(stack[-1]) else dict()
         last_task['~subtasks'] = []
         stack.append(last_task['~subtasks'])
 
     def _pop_subtasks():
         stack.pop()
-        last_task = stack[-1][-1]
+        last_task = stack[-1][-1] if len(stack[-1]) else dict()
 
         if '~subtasks' in last_task:
             last_task['~summary'] = _state_summary_dict(last_task['~subtasks'])
@@ -107,7 +122,8 @@ def _task_lineage_dicts(parent: str = '') -> [dict]:
         while level < len(stack) - 1:
             _pop_subtasks()
 
-        stack[-1] += [task.__dict__]
+        if task_filter(task):
+            stack[-1] += [task.__dict__]
 
     while 0 < len(stack) - 1:
         _pop_subtasks()
@@ -172,7 +188,7 @@ def _subtask_summary_repr(summary: dict) -> str:
 
 def task_list(arguments):
     if arguments['--YAML'] or arguments['--JSON']:
-        tasks = ({t.name: t.__dict__} for t in Task.list() if not t.holdingAny(arguments['--not-holding']))
+        tasks = ({t.name: t.__dict__} for t in filter(lambda t: _holdings_filter(t, arguments), Task.list()))
         common.dump(tasks, toyaml=arguments['--YAML'], tojson=arguments['--JSON'])
 
     else:
@@ -189,7 +205,7 @@ def _task_list_table(arguments):
     else:
         col_names = 'name state schedule last'.split(' ')
 
-    tasks = filter(lambda rec: not Task(record=rec).holdingAny(arguments['--not-holding']), db.list_table('tasks'))
+    tasks = filter(lambda rec: _holdings_filter(Task(record=rec), arguments), db.list_table('tasks'))
     rows = ([task[col] for col in col_names] for task in tasks)
 
     common.print_table([name.upper() for name in col_names], rows)
