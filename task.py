@@ -144,7 +144,7 @@ class Task(Entity):
         return (datetime.now() - self.lastDT).total_seconds() > timeout
 
     def holdingAny(self, resources: str) -> bool:
-        return bool(self.resources and resources and resources in self.resources)
+        return bool(self.resources and resources and (set(self.resources.split(' ')) & set(resources.split(' '))))
 
     def start(self):
         assert not self._db_record.last.find('<once>') > 0, 'should not run more than once'

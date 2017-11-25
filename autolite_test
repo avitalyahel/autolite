@@ -145,7 +145,7 @@ class TestTaskCRUD(AutoliteTestTask):
             for resources in ['Mine', '']:
                 for task_list_flags in ['', '-l', '-r', '-lr', '-J', '-Y', '-rJ', '-rY']:
 
-                    db.update('tasks', name=self.taskName, resources=resources)
+                    db.update(table='tasks', name=self.taskName, resources=resources)
 
                     if resources:
                         self.assertEqual(self.read_task(self.taskName).resources, resources)
@@ -301,11 +301,13 @@ class TestTaskListFilter(AutoliteTestTask):
                 resource += 'resource-0'
 
             if i % 2:
-                resource += ';resource-%d' % (i+1)
+                resource += ' resource-%d' % (i+1)
 
             if resource:
-                self.autolite('task set', name, 'resources', resource)
+                db.update(table='tasks', name=name, resources=resource)
                 self.assertEqual(self.read_task(name).resources, resource)
+
+        verbose(2, self.autolite('task list -l'))
 
         for i in range(4):
             if i % 2:
@@ -325,8 +327,7 @@ class TestTaskListFilter(AutoliteTestTask):
 
         out = self.autolite('task list -l', '--holding', 'resource-')
         verbose(2, 'holding', 'resource-:', '\n' + out)
-        self.assertEqual(len(out.split('\n')), 5)
-        self.assertIn('resource-', out)        
+        self.assertEqual(len(out.split('\n')), 2)
 
 
 class AutoliteTestSystem(AutoliteTest):
