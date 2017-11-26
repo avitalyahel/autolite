@@ -127,7 +127,7 @@ class AutoliteTestTask(AutoliteTest):
 
 class TestTaskCRUD(AutoliteTestTask):
 
-    def test_task_crud_positive(self):
+    def test_task_crud_P1_positive(self):
         for sched in ['continuous', 'hourly', 'daily', 'never']:
             self.autolite('task set', self.taskName, 'schedule --{}'.format(sched))
             self.assertEqual(self.read_task(self.taskName).schedule, sched)
@@ -170,7 +170,7 @@ class TestTaskCRUD(AutoliteTestTask):
         else:
             self.assertIn(self.taskName, dicts[0])
 
-    def test_task_crud_negative(self):
+    def test_task_crud_P2_negative(self):
         with self.assertRaises(SystemExit):
             self.read_task('missing')
 
@@ -191,7 +191,7 @@ class TestTaskState(AutoliteTestTask):
             db.update('tasks', name=self.taskName, state=state)
             self.assertEqual(self.read_task(self.taskName).state, state)
 
-    def test_task_reset_positive(self):
+    def test_task_reset_P1_positive(self):
         db.update('tasks', name=self.taskName, state='failed')
         self.assertEqual(self.read_task(self.taskName).state, 'failed')
 
@@ -201,7 +201,7 @@ class TestTaskState(AutoliteTestTask):
         with verbosity_context(level=1):
             self.assertIn('already pending.', self.autolite('task reset', self.taskName))
 
-    def test_task_reset_negative(self):
+    def test_task_reset_P2_negative(self):
         db.update('tasks', name=self.taskName, state='running')
         self.assertEqual(self.read_task(self.taskName).state, 'running')
 
@@ -225,7 +225,7 @@ class TestTaskInherit(AutoliteTestTask):
         
         return parent, child
 
-    def test_task_inherit_positive(self):
+    def test_task_inherit_P1_positive(self):
         childName = 'child1'
         parent, child = self._create_inheritor_task(childName, self.taskName)
 
@@ -239,7 +239,7 @@ class TestTaskInherit(AutoliteTestTask):
 
         self.autolite('task delete', childName)
 
-    def test_task_inherit_negative(self):
+    def test_task_inherit_P2_negative(self):
         childName = 'child2'
         parent, child = self._create_inheritor_task(childName, self.taskName)
 
@@ -251,7 +251,7 @@ class TestTaskInherit(AutoliteTestTask):
         with self.assertRaises(AssertionError):
             verbose(2, 'failed child:', str(failed_child))
 
-    def test_task_inherit_complex(self):
+    def test_task_inherit_P3_complex(self):
         self._create_heritage(
             parent=self.taskName,
             children=dict(
@@ -359,7 +359,7 @@ class AutoliteTestSystem(AutoliteTest):
 
 class TestSystemCRUD(AutoliteTestSystem):
 
-    def test_system_crud_positive(self):
+    def test_system_crud_P1_positive(self):
         for exe in 'installer | cleaner | monitor | config'.split(' | '):
             self.autolite('system set', self.systemName, exe, 'echo')
             self.assertEqual(getattr(self.read_system(self.systemName), exe), 'echo')
@@ -383,7 +383,7 @@ class TestSystemCRUD(AutoliteTestSystem):
             elif system_list_flags == '-Y':
                 self.assertIn(self.systemName, yaml.load(out)[0])
 
-    def test_system_crud_negative(self):
+    def test_system_crud_P2_negative(self):
         with self.assertRaises(SystemExit):
             self.autolite('system create', self.systemName)
 
@@ -400,7 +400,7 @@ class TestSystemCRUD(AutoliteTestSystem):
 
 class TestSystemState(AutoliteTestSystem):
 
-    def test_system_state_positive(self):
+    def test_system_state_P1_positive(self):
         self.autolite('system acquire', self.systemName)
         self.assertEqual(self.read_system(self.systemName).user, getpass.getuser())
 
@@ -411,7 +411,7 @@ class TestSystemState(AutoliteTestSystem):
 
         self.assertIn('already free', self.autolite('system release', self.systemName))
 
-    def test_system_state_negative(self):
+    def test_system_state_P2_negative(self):
         db.update(table='systems', name=self.systemName, user='bla')
 
         with self.assertRaises(SystemExit):
@@ -431,7 +431,7 @@ class TestRunner(AutoliteTestTask):
         self.autolite('task set', self.taskName, 'schedule --continuous')
         self._v = '-{}'.format('v' * max(get_verbosity_level(), 1))
 
-    def test_runner_positive(self):
+    def test_runner_P1_positive(self):
         self.runner(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
@@ -467,6 +467,8 @@ class TestRunner(AutoliteTestTask):
         self.autolite('task create', self.taskName, '--continuous', '--once')
         self.autolite('task set', self.taskName, 'command true')
 
+    def test_runner_task_P2_once(self):
+        self._create_task_once(name='once')
         self.runner(self._v)
         last = self.read_task(self.taskName).last
         self.assertIn('<once>', last)
@@ -476,7 +478,7 @@ class TestRunner(AutoliteTestTask):
 
         db.update('tasks', name=self.taskName, last='')
 
-    def test_runner_task_failed(self):
+    def test_runner_task_P1_failed(self):
         self.autolite('task set', self.taskName, 'command false')
         self.runner(self._v)
         self.assertEqual(self.read_task(self.taskName).state, 'failed')
@@ -494,7 +496,7 @@ class TestRunner(AutoliteTestTask):
         self.autolite('task reset', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-    def test_runner_notify(self):
+    def test_runner_P2_notify(self):
         import settings
         email_settings = settings.read().email
 
@@ -508,7 +510,7 @@ class TestRunner(AutoliteTestTask):
         from task import Task
         Task(name=self.taskName).notify()
 
-    def test_runner_condition(self):
+    def test_runner_P2_condition(self):
         for condition in [True, False]:
             task = self.read_task(self.taskName)
             task_last = task.last if 'last' in task else ''
