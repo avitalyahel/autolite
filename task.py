@@ -104,9 +104,6 @@ class Task(Entity):
         if not self.pending:
             return False
 
-        if self._db_record.last.find('<once>') > 0:
-            return False
-
         if self.continuous:
             return True
 
@@ -151,7 +148,7 @@ class Task(Entity):
         return bool(self.resources and resources and (set(self.resources.split(' ')) & set(resources.split(' '))))
 
     def start(self):
-        assert not self._db_record.last.find('<once>') > 0, 'should not run more than once'
+        assert not self.once, 'should not run more than once'
 
         with self.notifyStateChangeContext():
             last = self._db_record.last

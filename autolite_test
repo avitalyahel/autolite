@@ -462,21 +462,16 @@ class TestRunner(AutoliteTestTask):
         os.remove('assert-arg.py')
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-    def test_runner_task_once(self):
-        self.autolite('task delete', self.taskName)
-        self.autolite('task create', self.taskName, '--continuous', '--once')
-        self.autolite('task set', self.taskName, 'command true')
+    def _create_task_once(self, name: str, command: str ='true'):
+        self.autolite('task create', name, '--continuous', '--once')
+        self.autolite('task set', name, 'command', command)
 
     def test_runner_task_P2_once(self):
         self._create_task_once(name='once')
         self.runner(self._v)
-        last = self.read_task(self.taskName).last
-        self.assertIn('<once>', last)
 
-        self.runner(self._v)
-        self.assertEqual(self.read_task(self.taskName).last, last)
-
-        db.update('tasks', name=self.taskName, last='')
+        with self.assertRaises(SystemExit):
+            self.read_task(name='once')
 
     def test_runner_task_P1_failed(self):
         self.autolite('task set', self.taskName, 'command false')
@@ -486,7 +481,12 @@ class TestRunner(AutoliteTestTask):
         self.autolite('task reset', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-    def test_runner_timeout(self):
+        self._create_task_once(name='once', command='false')
+        self.runner(self._v)
+        self.assertIn('<once>', self.read_task(name='once').last)
+        self.autolite('task delete once')
+
+    def test_runner_P3_timeout(self):
         db.update('tasks', name=self.taskName, command='sleep 0.3')
         self.assertEqual(self.read_task(self.taskName).command, 'sleep 0.3')
 

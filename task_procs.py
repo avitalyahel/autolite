@@ -28,6 +28,9 @@ def serve(timeout: int) -> int:
             if proc.returncode:
                 task.fail()
 
+            elif task.once:
+                task.delete()
+
             else:
                 task.reset()
 
