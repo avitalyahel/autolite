@@ -81,19 +81,23 @@ class Task(Entity):
 
     @property
     def continuous(self) -> bool:
-        return self._db_record.schedule == 'continuous'
+        return self.inheritedAttr('schedule') == 'continuous'
 
     @property
     def daily(self) -> bool:
-        return self._db_record.schedule == 'daily'
+        return self.inheritedAttr('schedule') == 'daily'
 
     @property
     def hourly(self) -> bool:
-        return self._db_record.schedule == 'hourly'
+        return self.inheritedAttr('schedule') == 'hourly'
 
     @property
     def never(self) -> bool:
-        return self._db_record.schedule == 'never'
+        return self.inheritedAttr('schedule') == 'never'
+
+    @property
+    def once(self) -> bool:
+        return self._db_record.last.find('<once>') > 0
 
     @property
     def ready(self) -> bool:

@@ -269,14 +269,19 @@ class TestTaskInherit(AutoliteTestTask):
 
         self.autolite('task set decendant1 schedule --continuous')
         self.assertEqual(self.read_task('decendant1').schedule, 'continuous')
-        self.assertEqual(Task(name='decendant11').schedule, 'continuous')
-        self.assertEqual(Task(name='decendant121').schedule, 'continuous')
+
+        for name in ['decendant11', 'decendant121']:
+            self.assertEqual(Task(name=name).schedule, 'continuous')
+            self.assertEqual(Task(name=name).continuous, True)
 
         self.autolite('task set decendant21 schedule --hourly')
         self.assertEqual(self.read_task('decendant21').schedule, 'hourly')
+
         self.assertEqual(Task(name='decendant211').schedule, 'hourly')
-        self.autolite('task list -rl')
+        self.assertEqual(Task(name='decendant211').hourly, True)
+
         self.assertEqual(Task(name='decendant221').schedule, 'daily')
+        self.assertEqual(Task(name='decendant221').daily, True)
 
     def _create_heritage(self, parent: str, children: dict):
         for child, grandchild in children.items():
