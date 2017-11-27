@@ -52,3 +52,6 @@ class Entity(metaclass=MetaEntity):
 
     def inheritedAttr(self, attr: str) -> object:
         return getattr(self._db_record, attr)
+
+    def refresh(self):
+        self._db_record = db.read(self._tableName, name=self._db_record.name)
