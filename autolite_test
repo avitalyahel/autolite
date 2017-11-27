@@ -86,7 +86,8 @@ class AutoliteTest(unittest.TestCase):
         verbose(3, 'run autolite', ' '.join(cli))
 
         with redirected_stdout_context('autolite', *cli) as buf:
-            autolite.autolite(docopt.docopt(autolite.__doc__))
+            arguments = docopt.docopt(autolite.__doc__)
+            autolite.autolite(arguments)
             result = buf.getvalue()
 
         verbose(3, 'out:\r' + result[:-1])
@@ -95,7 +96,6 @@ class AutoliteTest(unittest.TestCase):
 
     def runner(self, *cli) -> str:
         with redirected_stdout_context('runner', *cli) as buf:
-            print(runner)
             runner.main(docopt.docopt(runner.__doc__))
             result = buf.getvalue()
 
@@ -294,9 +294,9 @@ class TestTaskInherit(AutoliteTestTask):
                 self._create_inheritor_task(grandchild, child)
 
 
-class TestTaskListFilter(AutoliteTestTask):
+class TestTaskResources(AutoliteTestTask):
     
-    def test_task_holdings(self):
+    def _test_task_P1_holdings(self):
         for i in range(4):
             name = self.taskName + '.%d' % (i+1)
             self.autolite('task create', name)
@@ -525,6 +525,35 @@ class TestRunner(AutoliteTestTask):
                 self.assertEqual(*lasts)
 
 
+class TestCookBook(AutoliteTestTask):
+
+    def setUp(self):
+        super(TestCookBook, self).setUp()
+        self._v = '-{}'.format('v' * max(get_verbosity_level(), 1))
+
+    def test_job_queue(self):
+        self.autolite('task create queue')
+        self.assertEqual(Task(name='queue').schedule, '')
+        db.update(table='tasks', name='queue', condition='if [ `autolite task list queue -r --holding Mine | wc -l` -gt 1 ] ; then exit 1 ; fi')
+        self.autolite('task set queue schedule --continuous')
+
+        for i in range(3):
+            job_name = 'job%d' % (i+1)
+            self.autolite('task create', job_name, '--inherit queue --once')
+            db.update(table='tasks', name=job_name, command='autolite task set $AUTOLITE_TASK_NAME resources Mine && sleep 0.5')
+
+        for job in self.autolite('task list queue -r').split('\n'):
+            job_name = job.split(':')[0].strip()
+
+            if not job_name or job_name == 'queue':
+                continue
+
+            self.runner(self._v)
+
+            with self.assertRaises(SystemExit):
+                self.read_task(job_name)
+
+
 def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:
     loadedTests = unittest.defaultTestLoader.loadTestsFromTestCase
     return unittest.TestSuite(loadedTests(case) for case in testCases)
@@ -550,10 +579,11 @@ ALL_TEST_CASES = (
     TestTaskCRUD,
     TestTaskState,
     TestTaskInherit,
-    TestTaskListFilter,
+    TestTaskResources,
     TestSystemCRUD,
     TestSystemState,
     TestRunner,
+    TestCookBook,
 )
 
 
