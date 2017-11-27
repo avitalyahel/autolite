@@ -35,6 +35,8 @@ def main(arguments):
     try:
         while True:
             for task in Task.list(state='pending'):
+                task.refresh()
+
                 if not task.ready:
                     verbose(2, task.name, 'not ready')
 
@@ -43,6 +45,7 @@ def main(arguments):
 
                 else:
                     task_procs.start(task)
+                    verbose(1, task.name, 'started')
 
             running = task_procs.serve(timeout)
 

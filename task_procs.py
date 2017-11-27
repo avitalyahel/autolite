@@ -12,9 +12,9 @@ g_procs = {}
 
 
 def start(task: Task):
-    task.start()
     g_procs.update({task.name: _new_task_proc(task)})
     verbose(2, 'proc pool added with:', g_procs[task.name])
+    task.start()
 
 
 def serve(timeout: int) -> int:
