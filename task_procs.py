@@ -49,8 +49,17 @@ def serve(timeout: int) -> int:
 
 def _new_task_proc(task: Task) -> subprocess.Popen:
     logfile = open(_new_log_path(task), 'w')
-    result = subprocess.Popen('export AUTOLITE_TASK_NAME="{}" ; '.format(task.name) + task.command, 
-                              shell=True, universal_newlines=True, stdout=logfile, stderr=logfile)
+    result = subprocess.Popen('''
+if [ -e ~/.bashrc ]
+then
+    . ~/.bashrc
+elif [ -e ~/.bash_profile ]
+then
+    . ~/.bash_profile
+fi
+export AUTOLITE_TASK_NAME="{}"
+'''.format(task.name) + task.command,
+        shell=True, universal_newlines=True, stdout=logfile, stderr=logfile)
     result.stdout = logfile
     return result
 

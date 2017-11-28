@@ -123,7 +123,9 @@ class Task(Entity):
             assert db_record.parent, 'missing parent for inheritance'
             db_record = db.read('tasks', db_record.parent)
 
-        return not db_record.condition or not os.system(db_record.condition)
+        result = not db_record.condition or not os.system(db_record.condition)
+        verbose(2, 'condition:', db_record.condition, 'result:', result)
+        return result
 
     @property
     def pending(self) -> bool:
@@ -168,7 +170,7 @@ class Task(Entity):
     def reset(self):
         with self.notifyStateChangeContext():
             if not self.running:
-                self._db_record.last = ''
+                self._db_record.last = '<once>' if self.once else ''
             self._db_record.state = 'pending'
             db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
 
