@@ -20,7 +20,10 @@ def get_verbosity_level() -> int:
 def verbose(level: int, *args):
     if g_verbosity_level >= level:
         if g_verbosity_level > 1:
-            print(datetime.now(), '<' + sys.argv[0] + '>', *args)
+            print(datetime.now(), '<' + sys.argv[0].split('/')[-1] + '>', *args)
+
+        elif g_verbosity_level > 0:
+            print(datetime.now(), *args)
 
         else:
             print(*args)
