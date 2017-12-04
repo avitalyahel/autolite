@@ -41,7 +41,7 @@ def main(arguments):
                     verbose(2, task.name, 'not ready')
 
                 elif not task.condition:
-                    verbose(1, task.name, 'condition not met')
+                    verbose(2, task.name, 'condition not met')
 
                 else:
                     task_procs.start(task)
