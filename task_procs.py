@@ -26,13 +26,22 @@ def serve(timeout: int) -> int:
 
         if proc.returncode is not None:
             if proc.returncode:
-                task.fail()
+                if proc.returncode == 126:  # bash error code for "Command invoked cannot execute"
+                    task.reset()
+                    verbose(1, task.name, 'aborted')
+
+                else:
+                    task.fail()
+                    verbose(1, task.name, 'failed')
 
             elif task.once:
+                task_name = task.name
                 task.delete()
+                verbose(1, task_name, 'delete')
 
             else:
                 task.reset()
+                verbose(1, task.name, 'reset')
 
             completed += [task_name]
 
