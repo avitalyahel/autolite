@@ -59,13 +59,17 @@ def system_list_table(arguments):
         rows = db.rows('systems')
 
     else:
-        col_names = ['name']
+        if arguments['--fields']:
+            col_names = arguments['--fields'].lower().split(',')
 
-        if not arguments['--col-1']:
-            col_names += ['user', 'comment']
+        else:
+            col_names = ['name']
+
+            if not arguments['--col-1']:
+                col_names += ['user', 'comment']
 
         systems = db.list_table('systems')
-        rows = ([task[col] for col in col_names] for task in systems)
+        rows = ([sys[col] for col in col_names] for sys in systems)
 
     col_titles = [name.upper() for name in col_names]
     common.print_table(col_titles, sorted(rows, key=lambda row: row[0]))

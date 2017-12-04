@@ -162,7 +162,7 @@ def list_table(table, **where) -> tuple:
     return (_new_schema(table, row) for row in rows(table, **where))
 
 
-def rows(table, sep='', **where):
+def rows(table, sep='', **where) -> iter:
     sql = 'SELECT * FROM ' + table
 
     if where:

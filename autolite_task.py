@@ -199,13 +199,35 @@ def _task_list_table(arguments):
     elif arguments['--long']:
         col_names = 'name parent schedule state command condition resources email last'.split(' ')
 
+    elif arguments['--fields']:
+        col_names = arguments['--fields'].lower().split(',')
+
     else:
         col_names = 'name state schedule last'.split(' ')
 
-    tasks = filter(lambda rec: _holdings_filter(Task(record=rec), arguments), db.list_table('tasks'))
+    if arguments['--ancestor']:
+        tasks = filter(lambda rec: _holdings_filter(Task(record=rec), arguments), db.list_table('tasks'))
+        tasks = filter(lambda task: _decendant_filter(task, arguments['--ancestor']), tasks)
+
+    else:
+        where = dict(name=arguments['<name>']) if arguments['<name>'] else dict()
+        tasks = filter(lambda rec: _holdings_filter(Task(record=rec), arguments), db.list_table('tasks', **where))
+
     rows = ([task[col] for col in col_names] for task in tasks)
 
     common.print_table([name.upper() for name in col_names], rows)
+
+
+def _decendant_filter(task: Task, ancestor: str) -> bool:
+    parent = task.parent
+
+    while parent != "":
+        if parent == ancestor:
+            return True
+
+        parent = db.read(table='tasks', name=parent).parent
+
+    return False
 
 
 def task_set(arguments):
