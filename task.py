@@ -97,7 +97,7 @@ class Task(Entity):
 
     @property
     def once(self) -> bool:
-        return self._db_record.last.find('<once>') > 0
+        return self._db_record.last.find('<once>') > -1
 
     @property
     def ready(self) -> bool:

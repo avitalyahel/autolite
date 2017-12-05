@@ -22,6 +22,7 @@ def serve(timeout: int) -> int:
 
     for task_name, proc in g_procs.items():
         task = Task(task_name)
+        task.reload()
         proc.poll()
 
         if proc.returncode is not None:
