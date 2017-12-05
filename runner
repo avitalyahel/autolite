@@ -10,7 +10,7 @@ Options:
     --version               Show version.
     -v --verbose            Higher verbosity messages.
     -t --timeout <sec>      Task timeout in seconds [default: 0].
-    -i --interval <sec>     Poll interval in seconds [default: 0.25].
+    -i --interval <sec>     Poll interval in seconds [default: 1].
 '''
 import os
 import sys
@@ -46,6 +46,9 @@ def main(arguments):
                 else:
                     task_procs.start(task)
                     verbose(1, task.name, 'started')
+
+                    verbose(2, 'sleeping interval', interval, 'sec...')
+                    sleep(interval) # avoid race on resources within heritage
 
             running = task_procs.serve(timeout)
 

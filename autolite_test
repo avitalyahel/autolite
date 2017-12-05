@@ -96,11 +96,16 @@ class AutoliteTest(unittest.TestCase):
         return result
 
     def runner(self, *cli) -> str:
+        if any(c == '--interval' for c in cli):
+            cli += ('--interval 0.25', )
+
+        verbose(2, 'runner', *cli)
+
         with redirected_stdout_context('runner', *cli) as buf:
             runner.main(docopt.docopt(runner.__doc__))
             result = buf.getvalue()
 
-        verbose(2, 'runner', ' '.join(cli), '->\n', '\r' + result[:-1])
+        verbose(2, '->\n', '\r' + result[:-1])
         return result
 
 
@@ -564,7 +569,7 @@ class TestRunner(AutoliteTestTask):
         self.assertEqual(self.read_task(self.taskName).command, 'sleep 0.3')
 
         self.runner(self._v, '--timeout 0.1')
-        self.assertEqual(self.read_task(self.taskName).state, 'failed')
+        self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
         self.autolite('task reset', self.taskName)
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
