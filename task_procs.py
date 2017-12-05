@@ -27,8 +27,8 @@ def serve(timeout: int) -> int:
         if proc.returncode is not None:
             if proc.returncode:
                 if proc.returncode == 126:  # bash error code for "Command invoked cannot execute"
-                    task.reset()
-                    verbose(1, task.name, 'aborted')
+                    task.skip()
+                    verbose(1, task.name, 'skipped')
 
                 else:
                     task.fail()

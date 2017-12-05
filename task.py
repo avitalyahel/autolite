@@ -174,6 +174,12 @@ class Task(Entity):
             self._db_record.state = 'pending'
             db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
 
+    def skip(self):
+        with self.notifyStateChangeContext():
+            self._db_record.last = '<once>' if self.once else ''
+            self._db_record.state = 'pending'
+            db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
+
     @contextmanager
     def notifyStateChangeContext(self):
         state = self.state
