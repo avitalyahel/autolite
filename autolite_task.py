@@ -1,5 +1,6 @@
 import sys
 from collections import Counter
+from datetime import datetime
 
 import db
 import consts
@@ -70,8 +71,11 @@ def _task_create_kwargs(arguments):
         state='pending',
         command=arguments['--command'],
         condition=arguments['--condition'],
-        last='<once>' if arguments['--once'] else None,
+        last=str(datetime.now()),
     )
+
+    if arguments['--once']:
+        result.last += '<once>'
 
     if arguments['--inherit']:
         parent = db.read(table='tasks', name=arguments['--inherit'])

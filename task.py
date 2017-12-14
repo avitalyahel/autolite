@@ -150,15 +150,8 @@ class Task(Entity):
         return bool(self.resources and resources and (set(self.resources.split(' ')) & set(resources.split(' '))))
 
     def start(self):
-        assert not self.once, 'should not run more than once'
-
         with self.notifyStateChangeContext():
-            last = self._db_record.last
-            self._db_record.last = str(datetime.now())
-
-            if last == '<once>':
-                self._db_record.last += '<once>'
-
+            self.setLast()
             self._db_record.state = 'running'
             db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
 
@@ -170,15 +163,19 @@ class Task(Entity):
     def reset(self):
         with self.notifyStateChangeContext():
             if not self.running:
-                self._db_record.last = '<once>' if self.once else ''
+                self.setLast()
+
             self._db_record.state = 'pending'
             db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
 
     def skip(self):
         with self.notifyStateChangeContext():
-            self._db_record.last = '<once>' if self.once else ''
+            self.setLast()
             self._db_record.state = 'pending'
             db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
+
+    def setLast(self):
+        self._db_record.last = str(datetime.now()) + ('<once>' if self.once else '')
 
     @contextmanager
     def notifyStateChangeContext(self):
@@ -186,12 +183,12 @@ class Task(Entity):
 
         yield
 
-        self.notify('task {} now {} (was {})'.format(self.name, self.state, state)
+        self.notify('task {} is {} (was {})'.format(self.name, self.state, state)
                     if self.state != state else '')
 
     def notify(self, subject: str = ''):
         if self.email:
-            _subject = subject if subject else 'task {} now {}'.format(self.name, self.state)
+            _subject = subject if subject else 'task {} is {}'.format(self.name, self.state)
 
             self.mailClient.send(
                 recipients=self.email.split(','),
