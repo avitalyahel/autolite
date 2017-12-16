@@ -183,12 +183,12 @@ class Task(Entity):
 
         yield
 
-        self.notify('task {} is {} (was {})'.format(self.name, self.state, state)
+        self.notify('task {} {} (was {})'.format(self.name, self.state, state)
                     if self.state != state else '')
 
     def notify(self, subject: str = ''):
         if self.email:
-            _subject = subject if subject else 'task {} is {}'.format(self.name, self.state)
+            _subject = subject if subject else 'task {} {}'.format(self.name, self.state)
 
             self.mailClient.send(
                 recipients=self.email.split(','),
