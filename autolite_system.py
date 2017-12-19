@@ -50,6 +50,7 @@ def _system_create_kwargs(arguments):
         monitor=arguments['--monitor'],
         cleaner=arguments['--cleaner'],
         config=arguments['--config'],
+        comment=arguments['--comment'],
     )
 
 

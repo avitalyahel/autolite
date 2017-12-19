@@ -114,8 +114,13 @@ class AutoliteTestTask(AutoliteTest):
     def setUp(self):
         super(AutoliteTestTask, self).setUp()
         self._taskName = 't1'
-        self.autolite('task create', self.taskName, '--daily')
+        self.autolite('task create', self.taskName, '--daily',
+            '--command bla --condition bla --comment bla')
         self.assertEqual(self.read_task(self.taskName).schedule, 'daily')
+
+        for attr in 'command condition comment'.split(' '):
+            self.assertEqual(getattr(self.read_task(name=self.taskName), attr), 'bla')
+            db.update('tasks', name=self.taskName, **{attr: ''})
 
     @property
     def taskName(self):
@@ -147,6 +152,9 @@ class TestTaskCRUD(AutoliteTestTask):
 
         self.autolite('task set', self.taskName, 'parent Dad')
         self.assertEqual(self.read_task(self.taskName).parent, 'Dad')
+
+        self.autolite('task set', self.taskName, 'comment', 'Hello!')
+        self.assertEqual(self.read_task(self.taskName).comment, 'Hello!')
 
         for name in ['', self.taskName]:
             for resources in ['Mine', '']:
@@ -385,8 +393,14 @@ class AutoliteTestSystem(AutoliteTest):
     def setUp(self):
         super(AutoliteTestSystem, self).setUp()
         self._systemName = 's1'
-        self.autolite('system create', self.systemName)
-        self.read_system(name=self.systemName)
+        self.autolite('system create', self.systemName,
+            '--ip ip --installer=exe --cleaner=exe --monitor=exe --config=exe --comment=text')
+        self.assertEqual(self.read_system(name=self.systemName).ip, 'ip')
+        self.assertEqual(self.read_system(name=self.systemName).comment, 'text')
+
+        for attr in 'installer cleaner monitor config'.split(' '):
+            self.assertEqual(getattr(self.read_system(name=self.systemName), attr), 'exe')
+            db.update('systems', name=self.systemName, **{attr: ''})
 
     @property
     def systemName(self):

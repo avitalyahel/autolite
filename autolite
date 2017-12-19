@@ -10,17 +10,18 @@ Usage:
                     [<name> | --ancestor=<ancestor>]
                     [--not-holding=<resources>] [--holding=<resources>]
     autolite task create <name> [{sched_flags}] [--once]
-                    [--command=<exe>] [--condition=<exe>] [--inherit=<parent>]
+                    [--command=<exe>] [--condition=<exe>] [--inherit=<parent>] [--comment=<text>]
     autolite (task | system) (read | delete) <name>
     autolite task set <name> schedule ({sched_flags})
     autolite task set <name> (condition | command) <exe>
     autolite task set <name> parent <parent>
     autolite task set <name> email <email>
     autolite task set <name> resources <resources>
+    autolite task set <name> comment <text>
     autolite task reset <name> [--force]
     autolite system list [-1 | -l | -J | -Y | -f=<fields>]
     autolite system create <name> [--ip <ip>]
-                    [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
+                    [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>] [--comment=<text>]
     autolite system set <name> ip <ip>
     autolite system set <name> comment <text>
     autolite system set <name> (installer | cleaner | monitor | config) <exe>

@@ -71,6 +71,7 @@ def _task_create_kwargs(arguments):
         state='pending',
         command=arguments['--command'],
         condition=arguments['--condition'],
+        comment=arguments['--comment'],
         last=str(datetime.now()),
     )
 
@@ -246,6 +247,9 @@ def task_set(arguments):
 
     elif arguments['resources']:
         kwargs = dict(resources=arguments['<resources>'])
+
+    elif arguments['comment']:
+        kwargs = dict(comment=arguments['<text>'])
 
     else:
         kwargs = dict(
