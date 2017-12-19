@@ -208,7 +208,7 @@ def _task_list_table(arguments):
         col_names = arguments['--fields'].lower().split(',')
 
     else:
-        col_names = 'name state schedule last'.split(' ')
+        col_names = 'name state schedule comment last'.split(' ')
 
     if arguments['--ancestor']:
         tasks = filter(lambda rec: _holdings_filter(Task(record=rec), arguments), db.list_table('tasks'))
