@@ -56,21 +56,19 @@ def _system_create_kwargs(arguments):
 
 def system_list_table(arguments):
     if arguments['--long']:
-        col_names = db.g_table_columns.systems.names
-        rows = db.rows('systems')
+        col_names = 'name ip user installer cleaner config monitor comment'.split(' ')
 
-    else:
-        if arguments['--fields']:
+    elif arguments['--fields']:
             col_names = arguments['--fields'].lower().split(',')
 
-        else:
-            col_names = ['name']
+    else:
+        col_names = ['name']
 
-            if not arguments['--col-1']:
-                col_names += ['user', 'comment']
+        if not arguments['--col-1']:
+            col_names += ['user', 'comment']
 
-        systems = db.list_table('systems')
-        rows = ([sys[col] for col in col_names] for sys in systems)
+    systems = db.list_table('systems')
+    rows = ([sys[col] for col in col_names] for sys in systems)
 
     col_titles = [name.upper() for name in col_names]
     common.print_table(col_titles, sorted(rows, key=lambda row: row[0]))

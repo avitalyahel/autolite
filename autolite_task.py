@@ -202,7 +202,7 @@ def _task_list_table(arguments):
         col_names = ['name']
 
     elif arguments['--long']:
-        col_names = 'name parent schedule state command condition resources email last'.split(' ')
+        col_names = 'name parent schedule state command condition resources email comment last'.split(' ')
 
     elif arguments['--fields']:
         col_names = arguments['--fields'].lower().split(',')
