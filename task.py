@@ -153,6 +153,7 @@ class Task(Entity):
         with self.notifyStateChangeContext():
             self.setLast()
             self._db_record.state = 'running'
+            self._db_record.log = ''
             db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
 
     def fail(self):
