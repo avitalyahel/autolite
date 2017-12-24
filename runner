@@ -61,7 +61,7 @@ def main(arguments):
                 sleep(interval)
 
     except Exception as exc:
-        if arguments['--verbose'] > 2:
+        if arguments['--verbose'] > 1:
             raise
 
         else:
