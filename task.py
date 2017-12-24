@@ -183,8 +183,12 @@ class Task(Entity):
 
         yield
 
-        self.notify('task {} {} (was {})'.format(self.name, self.state, state)
-                    if self.state != state else '')
+        if self.pending and state == 'running':
+            self.notify('task {} succeeded'.format(self.name))
+
+        else:
+            self.notify('task {} {} (was {})'.format(self.name, self.state, state)
+                        if self.state != state else '')
 
     def notify(self, subject: str = ''):
         if self.email:
