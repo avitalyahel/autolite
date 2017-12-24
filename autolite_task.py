@@ -71,7 +71,6 @@ def _task_create_kwargs(arguments):
         state='pending',
         command=arguments['--command'],
         condition=arguments['--condition'],
-        comment=arguments['--comment'],
         last=str(datetime.now()),
     )
 
@@ -202,13 +201,13 @@ def _task_list_table(arguments):
         col_names = ['name']
 
     elif arguments['--long']:
-        col_names = 'name parent schedule state command condition resources email comment last'.split(' ')
+        col_names = 'name parent schedule state command condition resources email log last'.split(' ')
 
     elif arguments['--fields']:
         col_names = arguments['--fields'].lower().split(',')
 
     else:
-        col_names = 'name state schedule comment last'.split(' ')
+        col_names = 'name state schedule log last'.split(' ')
 
     if arguments['--ancestor']:
         tasks = filter(lambda rec: _holdings_filter(Task(record=rec), arguments), db.list_table('tasks'))
@@ -248,8 +247,8 @@ def task_set(arguments):
     elif arguments['resources']:
         kwargs = dict(resources=arguments['<resources>'])
 
-    elif arguments['comment']:
-        kwargs = dict(comment=arguments['<text>'])
+    elif arguments['log']:
+        kwargs = dict(log=arguments['<text>'])
 
     else:
         kwargs = dict(

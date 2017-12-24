@@ -54,7 +54,7 @@ TABLE_SCHEMAS = AttrDict(
         command='TEXT',
         resources='TEXT',
         email='TEXT',
-        comment='TEXT',
+        log='TEXT',
         last='TEXT',
     ),
     systems=TableSchema(

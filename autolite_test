@@ -115,10 +115,10 @@ class AutoliteTestTask(AutoliteTest):
         super(AutoliteTestTask, self).setUp()
         self._taskName = 't1'
         self.autolite('task create', self.taskName, '--daily',
-            '--command bla --condition bla --comment bla')
+            '--command bla --condition bla')
         self.assertEqual(self.read_task(self.taskName).schedule, 'daily')
 
-        for attr in 'command condition comment'.split(' '):
+        for attr in 'command condition'.split(' '):
             self.assertEqual(getattr(self.read_task(name=self.taskName), attr), 'bla')
             db.update('tasks', name=self.taskName, **{attr: ''})
 
@@ -153,8 +153,8 @@ class TestTaskCRUD(AutoliteTestTask):
         self.autolite('task set', self.taskName, 'parent Dad')
         self.assertEqual(self.read_task(self.taskName).parent, 'Dad')
 
-        self.autolite('task set', self.taskName, 'comment', 'Hello!')
-        self.assertEqual(self.read_task(self.taskName).comment, 'Hello!')
+        self.autolite('task set', self.taskName, 'log', 'task.log')
+        self.assertEqual(self.read_task(self.taskName).log, 'task.log')
 
         for name in ['', self.taskName]:
             for resources in ['Mine', '']:
