@@ -1,4 +1,5 @@
 import sys
+import yaml
 from collections import Counter
 from datetime import datetime
 
@@ -28,7 +29,7 @@ def menu(arguments):
                 Task.create(**_task_create_kwargs(arguments))
 
             elif arguments['read']:
-                print(Task(arguments['<name>']))
+                task_read(arguments)
 
             elif arguments['set']:
                 task_set(arguments)
@@ -42,6 +43,17 @@ def menu(arguments):
         except NameError as exc:
             print(PACKAGE_NAME, 'Error!', exc)
             sys.exit(1)
+
+
+def task_read(arguments):
+    task = Task(arguments['<name>'])
+    toyaml, tojson = arguments['--YAML'], arguments['--JSON']
+
+    if toyaml or tojson:
+        common.dump([task.__dict__], toyaml, tojson, squash=True)
+
+    else:
+        print(task)
 
 
 def task_lineage(arguments):
@@ -189,7 +201,9 @@ def _subtask_summary_repr(summary: dict) -> str:
 
 def task_list(arguments):
     if arguments['--YAML'] or arguments['--JSON']:
-        tasks = ({t.name: t.__dict__} for t in filter(lambda t: _holdings_filter(t, arguments), Task.list()))
+        where = dict(name=arguments['<name>']) if arguments['<name>'] else dict()
+        tasks = Task.list(**where)
+        tasks = ({t.name: t.__dict__} for t in filter(lambda t: _holdings_filter(t, arguments), tasks))
         common.dump(tasks, toyaml=arguments['--YAML'], tojson=arguments['--JSON'])
 
     else:
@@ -260,14 +274,15 @@ def task_set(arguments):
     assert kwargs, 'unexpected empty attrs to set for tasks'
 
     db.update('tasks', name=arguments['<name>'], **kwargs)
-    print(Task(arguments['<name>']))
+    arguments['--fields'] = 'name,' + ','.join(kwargs.keys())
+    _task_list_table(arguments)
 
 
 def task_reset(arguments):
     task = Task(arguments['<name>'])
 
     if task.pending:
-        verbose(1, 'task', task.name, 'already pending.')
+        verbose(0, 'task', task.name, 'already pending.')
         return
 
     if not arguments['--force'] and not task.failed:
@@ -275,3 +290,5 @@ def task_reset(arguments):
         sys.exit(1)
 
     task.reset()
+    _task_list_table(arguments)
+

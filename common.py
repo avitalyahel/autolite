@@ -90,12 +90,17 @@ def active_user_name() -> str:
     return getpass.getuser()
 
 
-def dump(items: iter, toyaml: bool = False, tojson: bool = False, entry=lambda item: item):
+def dump(items: iter, toyaml: bool = False, tojson: bool = False, squash: bool = False, entry=lambda item: item):
+    entries = [entry(i) for i in items]
+
+    if squash and len(entries) == 1:
+        entries = entries[0]
+
     if toyaml:
-        print(yaml.dump([entry(i) for i in items], default_flow_style=False))
+        print(yaml.dump(entries, default_flow_style=False))
 
     if tojson:
-        print(json.dumps([entry(i) for i in items], indent=4))
+        print(json.dumps(entries, indent=4))
 
 
 @contextmanager

@@ -127,13 +127,12 @@ class AutoliteTestTask(AutoliteTest):
         return self._taskName
 
     def read_task(self, name: str) -> AttrDict:
-        task_str = self.autolite('task read ' + name)
-        return AttrDict(yaml.load(task_str.replace(', ', '\n')))
+        return db.read('tasks', name)
 
     def tearDown(self):
         self.autolite('task delete', self.taskName)
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(NameError):
             self.read_task(self.taskName)
 
 
@@ -148,7 +147,7 @@ class TestTaskCRUD(AutoliteTestTask):
         self.assertEqual(self.read_task(self.taskName).command, 'ls')
 
         self.autolite('task set', self.taskName, 'condition true')
-        self.assertEqual(self.read_task(self.taskName).condition, True)
+        self.assertEqual(self.read_task(self.taskName).condition, 'true')
 
         self.autolite('task set', self.taskName, 'parent Dad')
         self.assertEqual(self.read_task(self.taskName).parent, 'Dad')
@@ -186,7 +185,7 @@ class TestTaskCRUD(AutoliteTestTask):
             self.assertIn(self.taskName, dicts[0])
 
     def test_task_crud_P2_negative(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(NameError):
             self.read_task('missing')
 
         self.assertNotEqual(self.read_task(self.taskName).schedule, 'continuous')
@@ -407,13 +406,12 @@ class AutoliteTestSystem(AutoliteTest):
         return self._systemName
 
     def read_system(self, name: str) -> AttrDict:
-        task_str = self.autolite('system read ' + name)
-        return AttrDict(yaml.load(task_str.replace(', ', '\n')))
+        return db.read('systems', name)
 
     def tearDown(self):
         self.autolite('system delete', self.systemName)
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(NameError):
             self.read_system(self.systemName)
 
 
@@ -447,7 +445,7 @@ class TestSystemCRUD(AutoliteTestSystem):
         with self.assertRaises(SystemExit):
             self.autolite('system create', self.systemName)
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(NameError):
             self.read_system('missing')
 
         with self.assertRaises(SystemExit):
@@ -562,7 +560,7 @@ class TestRunner(AutoliteTestTask):
         self._create_task_once(name='once')
         self.runner(self._v)
 
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(NameError):
             self.read_task(name='once')
 
     def test_runner_task_P1_failed(self):
@@ -640,7 +638,7 @@ class TestCookBook(AutoliteTestTask):
 
             self.runner(self._v)
 
-            with self.assertRaises(SystemExit):
+            with self.assertRaises(NameError):
                 self.read_task(job_name)
 
 
