@@ -12,10 +12,12 @@ PACKAGE_NAME = SELF_SUB_DIR
 def menu(arguments):
     if arguments['list']:
         if arguments['--YAML'] or arguments['--JSON']:
-            common.dump(System.list(), toyaml=arguments['--YAML'], tojson=arguments['--JSON'], entry=lambda item: {item.name: item.__dict__})
+            where = dict(name=arguments['<name>']) if arguments['<name>'] else dict()
+            systems = System.list(**where)
+            common.dump(systems, toyaml=arguments['--YAML'], tojson=arguments['--JSON'], entry=lambda item: {item.name: item.__dict__})
 
         else:
-            system_list_table(arguments)
+            _system_list_table(arguments)
 
     elif system_execute(arguments):
         pass
@@ -26,7 +28,7 @@ def menu(arguments):
                 System.create(**_system_create_kwargs(arguments))
 
             elif arguments['read']:
-                print(System(arguments['<name>']))
+                system_read(arguments)
 
             elif arguments['set']:
                 system_set(arguments)
@@ -42,6 +44,17 @@ def menu(arguments):
             sys.exit(1)
 
 
+def system_read(arguments):
+    system = System(arguments['<name>'])
+    toyaml, tojson = arguments['--YAML'], arguments['--JSON']
+
+    if toyaml or tojson:
+        common.dump([system.__dict__], toyaml, tojson, squash=True)
+
+    else:
+        print(system)
+
+
 def _system_create_kwargs(arguments):
     return dict(
         name=arguments['<name>'],
@@ -54,7 +67,7 @@ def _system_create_kwargs(arguments):
     )
 
 
-def system_list_table(arguments):
+def _system_list_table(arguments):
     if arguments['--long']:
         col_names = 'name ip user installer cleaner config monitor comment'.split(' ')
 
@@ -67,7 +80,8 @@ def system_list_table(arguments):
         if not arguments['--col-1']:
             col_names += ['user', 'comment']
 
-    systems = db.list_table('systems')
+    where = dict(name=arguments['<name>']) if arguments['<name>'] else dict()
+    systems = db.list_table('systems', **where)
     rows = ([sys[col] for col in col_names] for sys in systems)
 
     col_titles = [name.upper() for name in col_names]
@@ -89,7 +103,8 @@ def system_set(arguments):
             kwargs.update(comment=arguments['<text>'])
 
     db.update('systems', name=arguments['<name>'], **kwargs)
-
+    arguments['--fields'] = 'name,' + ','.join(kwargs.keys())
+    _system_list_table(arguments)
 
 def system_execute(arguments) -> bool:
     if arguments['set']:

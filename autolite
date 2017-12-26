@@ -11,7 +11,8 @@ Usage:
                     [--not-holding=<resources>] [--holding=<resources>]
     autolite task create <name> [{sched_flags}] [--once]
                     [--command=<exe>] [--condition=<exe>] [--inherit=<parent>]
-    autolite (task | system) (read | delete) <name>
+    autolite (task | system) read <name> [-J | -Y]
+    autolite (task | system) delete <name>
     autolite task set <name> schedule ({sched_flags})
     autolite task set <name> (condition | command) <exe>
     autolite task set <name> parent <parent>
@@ -19,7 +20,7 @@ Usage:
     autolite task set <name> resources <resources>
     autolite task set <name> log <text>
     autolite task reset <name> [--force]
-    autolite system list [-1 | -l | -J | -Y | -f=<fields>]
+    autolite system list [-1 | -l | -J | -Y | -f=<fields>] [<name>]
     autolite system create <name> [--ip <ip>]
                     [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>] [--comment=<text>]
     autolite system set <name> ip <ip>
