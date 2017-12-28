@@ -182,7 +182,7 @@ class TestTaskCRUD(AutoliteTestTask):
             self.assertEqual(len(dicts), 0)
 
         else:
-            self.assertIn(self.taskName, dicts[0])
+            self.assertEqual(self.taskName, dicts[0]['name'])
 
     def test_task_crud_P2_negative(self):
         with self.assertRaises(NameError):

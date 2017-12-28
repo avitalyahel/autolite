@@ -203,8 +203,8 @@ def task_list(arguments):
     if arguments['--YAML'] or arguments['--JSON']:
         where = dict(name=arguments['<name>']) if arguments['<name>'] else dict()
         tasks = Task.list(**where)
-        tasks = ({t.name: t.__dict__} for t in filter(lambda t: _holdings_filter(t, arguments), tasks))
-        common.dump(tasks, toyaml=arguments['--YAML'], tojson=arguments['--JSON'])
+        tasks = filter(lambda t: _holdings_filter(t, arguments), tasks)
+        common.dump(tasks, toyaml=arguments['--YAML'], tojson=arguments['--JSON'], entry=lambda e: e.__dict__)
 
     else:
         _task_list_table(arguments)
