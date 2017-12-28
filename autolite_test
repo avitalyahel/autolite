@@ -436,10 +436,10 @@ class TestSystemCRUD(AutoliteTestSystem):
                 out = '\n'.join(out.split('\n')[1:])
 
             if system_list_flags == '-J':
-                self.assertIn(self.systemName, json.loads(out)[0])
+                self.assertEqual(self.systemName, json.loads(out)[0]['name'])
 
             elif system_list_flags == '-Y':
-                self.assertIn(self.systemName, yaml.load(out)[0])
+                self.assertEqual(self.systemName, yaml.load(out)[0]['name'])
 
     def test_system_crud_P2_negative(self):
         with self.assertRaises(SystemExit):

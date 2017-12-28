@@ -14,7 +14,7 @@ def menu(arguments):
         if arguments['--YAML'] or arguments['--JSON']:
             where = dict(name=arguments['<name>']) if arguments['<name>'] else dict()
             systems = System.list(**where)
-            common.dump(systems, toyaml=arguments['--YAML'], tojson=arguments['--JSON'], entry=lambda item: {item.name: item.__dict__})
+            common.dump(systems, toyaml=arguments['--YAML'], tojson=arguments['--JSON'], entry=lambda item: item.__dict__)
 
         else:
             _system_list_table(arguments)
