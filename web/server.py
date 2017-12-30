@@ -97,7 +97,7 @@ def html_tasks() -> str:
     return HTML_HEAD + '''
 <p><b>Tasks</b> | <a href="{root}systems">Systems</a></p>
 '''.format(root=g_root_url) + \
-    html_table(data, columns, click_url='/tasks/') + \
+    html_table(data, columns, click_url='{}tasks/'.format(g_root_url)) + \
     HTML_TAIL
 
 
@@ -118,7 +118,7 @@ def html_systems() -> str:
     return HTML_HEAD + '''
 <p><a href="{root}tasks">Tasks</a> | <b>Systems</b></p>
 '''.format(root=g_root_url) + \
-    html_table(data, columns, click_url='/systems/') + \
+    html_table(data, columns, click_url='{}systems/'.format(g_root_url)) + \
     HTML_TAIL
 
 
