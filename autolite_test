@@ -270,7 +270,9 @@ class TestTaskInherit(AutoliteTestTask):
             parent=self.taskName,
             children=dict(
                 decendant1=dict(
-                    decendant11='decendant111',
+                    decendant11=dict(
+                        decendant111='decendant1111',
+                    ),
                     decendant12='decendant121',
                 ),
                 decendant2=dict(
@@ -282,11 +284,16 @@ class TestTaskInherit(AutoliteTestTask):
         self.autolite('task list -rl')
 
         self.autolite('task set decendant1 schedule --continuous')
-        self.assertEqual(self.read_task('decendant1').schedule, 'continuous')
+        self.autolite('task set decendant1 command echo')
+        self.autolite('task set decendant1 email a@b.net')
+        self.autolite('task set decendant1 condition true')
 
-        for name in ['decendant11', 'decendant121']:
+        for name in ['decendant1', 'decendant11', 'decendant121', 'decendant1111']:
             self.assertEqual(Task(name=name).schedule, 'continuous')
             self.assertEqual(Task(name=name).continuous, True)
+            self.assertEqual(Task(name=name).command, 'echo')
+            self.assertEqual(Task(name=name).email, 'a@b.net')
+            self.assertEqual(Task(name=name).condition, True)
 
         self.autolite('task set decendant21 schedule --hourly')
         self.assertEqual(self.read_task('decendant21').schedule, 'hourly')
