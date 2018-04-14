@@ -117,14 +117,9 @@ class Task(Entity):
 
     @property
     def condition(self) -> bool:
-        db_record = self._db_record
-
-        if db_record.condition == '<inherit>':
-            assert db_record.parent, 'missing parent for inheritance'
-            db_record = db.read('tasks', db_record.parent)
-
-        result = not db_record.condition or not os.system(db_record.condition)
-        verbose(2, 'condition:', db_record.condition, 'result:', result)
+        condition = self.inheritedAttr('condition')
+        result = not condition or not os.system(condition)
+        verbose(2, 'condition:', condition, 'result:', result)
         return result
 
     @property
