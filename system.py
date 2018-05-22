@@ -14,32 +14,40 @@ class System(Entity):
             db.update(self.tableName, name=self.name, user=self._db_record.user)
 
         elif self._db_record.user == active_user_name():
-            raise UserWarning('You have already acquired: ' + self.name)
+            raise UserWarning('you have already acquired: ' + self.name)
 
         else:
-            raise PermissionError('already acquired by: ' + self._db_record.user)
+            raise PermissionError('already owned by: ' + self._db_record.user)
+
+    def claim(self):
+        if self._db_record.user and self._db_record.user != active_user_name():
+            raise PermissionError('owned by other: {}'.format(self._db_record.user))
 
     def release(self, force: bool = False):
         if not self._db_record.user:
             raise UserWarning('already free: ' + self.name)
 
         elif self._db_record.user != active_user_name() and not force:
-            raise PermissionError('acquired by other: {}'.format(self._db_record.user))
+            raise PermissionError('owned by other: {}'.format(self._db_record.user))
 
         else:
             self._db_record.user = ''
             db.update(self.tableName, name=self.name, user=self._db_record.user)
 
     def install(self):
+        self.claim()
         assert not os.system(self._db_record.installer)
 
     def clean(self):
+        self.claim()
         assert not os.system(self._db_record.cleaner)
 
     def monitor(self):
+        self.claim()
         return not os.system(self._db_record.monitor)
 
     def config(self):
+        self.claim()
         return not os.system(self._db_record.config)
 
     def delete(self):

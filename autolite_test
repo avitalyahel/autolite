@@ -469,7 +469,7 @@ class TestSystemState(AutoliteTestSystem):
         self.autolite('system acquire', self.systemName)
         self.assertEqual(self.read_system(self.systemName).user, getpass.getuser())
 
-        self.assertIn('You have already acquired', self.autolite('system acquire', self.systemName))
+        self.assertIn('you have already acquired', self.autolite('system acquire', self.systemName))
 
         self.autolite('system release', self.systemName)
         self.assertEqual(db.read(table='systems', name=self.systemName).user, '')
