@@ -35,20 +35,20 @@ class System(Entity):
             db.update(self.tableName, name=self.name, user=self._db_record.user)
 
     def install(self):
-        self.claim()
-        assert not os.system(self._db_record.installer)
+        assert self._execute(self._db_record.installer)
 
     def clean(self):
-        self.claim()
-        assert not os.system(self._db_record.cleaner)
+        assert self._execute(self._db_record.cleaner)
 
     def monitor(self):
-        self.claim()
-        return not os.system(self._db_record.monitor)
+        assert self._execute(self._db_record.monitor)
 
     def config(self):
+        assert self._execute(self._db_record.config)
+
+    def _execute(self, executable: str) -> bool:
         self.claim()
-        return not os.system(self._db_record.config)
+        return not os.system('export AUTOLITE_SYSTEM_NAME={name} ; {exe}'.format(name=self.name, exe=executable))
 
     def delete(self):
         db.delete(self.tableName, name=self.name)

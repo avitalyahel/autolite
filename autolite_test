@@ -430,6 +430,9 @@ class TestSystemCRUD(AutoliteTestSystem):
             self.assertEqual(getattr(self.read_system(self.systemName), exe), 'echo')
             self.autolite('system', exe.replace('er', ''), self.systemName)
 
+            db.update('systems', name=self.systemName, **{exe: 'if [ -z "$AUTOLITE_SYSTEM_NAME" ] ; then exit 1 ; fi'})
+            self.autolite('system', exe.replace('er', ''), self.systemName)
+
         self.autolite('system set', self.systemName, 'ip', 'localhost')
         self.assertEqual(self.read_system(self.systemName).ip, 'localhost')
 
