@@ -118,7 +118,7 @@ class Task(Entity):
     @property
     def condition(self) -> bool:
         condition = self.inheritedAttr('condition')
-        result = not condition or not os.system(condition)
+        result = not condition or not os.system('export AUTOLITE_TASK_NAME="{}" ; '.format(self.name) + condition)
         verbose(2, 'condition:', condition, 'result:', result)
         return result
 
