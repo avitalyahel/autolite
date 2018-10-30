@@ -39,16 +39,17 @@ def main(arguments):
 
                 if not task.ready:
                     verbose(2, task.name, 'not ready')
+                    continue
 
-                elif not task.condition:
+                verbose(2, 'Sleep', interval, 'sec (to avoid race within heritage)...')
+                sleep(interval)
+
+                if not task.condition:
                     verbose(2, task.name, 'condition not met')
 
                 else:
                     task_procs.start(task)
                     verbose(1, task.name, 'started')
-
-                    verbose(2, 'sleeping interval', interval, 'sec...')
-                    sleep(interval) # avoid race on resources within heritage
 
             running = task_procs.serve(timeout)
 
