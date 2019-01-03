@@ -61,7 +61,7 @@ def serve(timeout: int) -> int:
 
 
 def _new_task_proc(task: Task) -> subprocess.Popen:
-    logfile = open(_new_log_path(task), 'w')
+    logfile = open(_new_log_path(task), 'w', 0)
     result = subprocess.Popen('''
 if [ -e ~/.bashrc ]
 then
