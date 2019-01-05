@@ -146,7 +146,7 @@ class Task(Entity):
 
     def start(self):
         with self.notifyStateChangeContext():
-            self.setLast(str(datetime.now()))
+            self._setLast(str(datetime.now()))
             self._db_record.state = 'running'
             self._db_record.log = ''
             db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
@@ -163,11 +163,15 @@ class Task(Entity):
 
     def skip(self):
         with self.notifyStateChangeContext():
-            self.setLast('')
+            self._setLast('')
             self._db_record.state = 'pending'
             db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
 
-    def setLast(self, last: str):
+    def updateLast(self, last: str):
+        self._setLast(last)
+        db.update('tasks', name=self.name, last=self._db_record.last)
+        
+    def _setLast(self, last: str):
         self._db_record.last = last + ('<once>' if self.once else '')
 
     @contextmanager
