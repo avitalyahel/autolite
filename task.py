@@ -107,13 +107,13 @@ class Task(Entity):
         if self.continuous:
             return True
 
-        if self.daily:
-            return str(datetime.now().date()) > self._db_record.last
-
         if self.hourly:
             now = datetime.now()
             now_modulu_hour = now - timedelta(minutes=now.minute, seconds=now.second, microseconds=now.microsecond)
             return str(now_modulu_hour) > self._db_record.last
+
+        if self.daily:
+            return str(datetime.now().date()) > self._db_record.last
 
     @property
     def condition(self) -> bool:

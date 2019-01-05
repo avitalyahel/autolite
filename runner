@@ -46,6 +46,7 @@ def main(arguments):
 
                 if not task.condition:
                     verbose(2, task.name, 'condition not met')
+                    task.setLast(str(datetime.now()))
 
                 else:
                     task_procs.start(task)
