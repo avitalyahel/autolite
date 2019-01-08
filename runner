@@ -45,9 +45,10 @@ def main(arguments):
                 verbose(2, 'Sleep', interval, 'sec (to avoid race within heritage)...')
                 sleep(interval)
 
+                task.updateLast(str(datetime.now()))
+
                 if not task.condition:
                     verbose(2, task.name, 'condition not met')
-                    task.updateLast(str(datetime.now()))
 
                 else:
                     task_procs.start(task)
