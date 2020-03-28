@@ -615,12 +615,7 @@ class TestRunner(AutoliteTestTask):
             db.update('tasks', name=self.taskName, condition=str(condition).lower(), command='sleep 0.5')
             self.runner(self._v)
             lasts = (self.read_task(self.taskName).last, task_last)
-
-            if condition:
-                self.assertNotEqual(*lasts)
-
-            else:
-                self.assertEqual(*lasts)
+            self.assertNotEqual(*lasts)
 
 
 class TestCookBook(AutoliteTestTask):
