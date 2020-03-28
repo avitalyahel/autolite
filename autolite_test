@@ -95,7 +95,7 @@ class AutoliteTest(unittest.TestCase):
         return result
 
     def runner(self, *cli) -> str:
-        if any(c == '--interval' for c in cli):
+        if not any('--interval' in c for c in cli):
             cli += ('--interval 0.25',)
 
         verbose(2, 'runner', *cli)
@@ -635,10 +635,13 @@ class TestCookBook(AutoliteTestTask):
             db.update(table='tasks', name=job_name,
                       command='autolite task set $AUTOLITE_TASK_NAME resources Mine && sleep 0.5')
 
-        for job in self.autolite('task list queue -r').split('\n'):
-            job_name = job.split(':')[0].strip()
+        for line in self.autolite('task list queue -r').split('\n'):
+            if not line or '<autolite>' in line:
+                continue
 
-            if not job_name or job_name == 'queue':
+            job_name = line.split(':')[0].strip()
+
+            if job_name == 'queue':
                 continue
 
             self.runner(self._v)

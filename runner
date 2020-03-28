@@ -43,6 +43,10 @@ def main(arguments):
                     verbose(2, task.name, 'not ready')
                     continue
 
+                if not task.command:
+                    verbose(2, task.name, 'empty command')
+                    continue
+
                 verbose(2, 'Sleep', interval, 'sec (to avoid race within heritage)...')
                 sleep(interval)
 
