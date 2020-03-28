@@ -1,8 +1,8 @@
 import json
 import subprocess
 
-
 g_root_url = '/'
+
 
 def set_root_url(root: str):
     global g_root_url
@@ -52,10 +52,12 @@ TD = '<td nowrap style="vertical-align:top">{}</td>'
 A = '<a href="{val}">{val}</a>'
 
 
-def html_table(data: [dict] = [], columns: [str] = [], click_url: str = '/') -> str:
+def html_table(data: [dict] = None, columns: [str] = None, click_url: str = '/') -> str:
     return TABLE.format(
         head=html_table_head(columns),
-        rows='\n'.join(html_table_row(row, columns, onclick='onclick="loadUrl(\'{}\')"'.format(click_url + row['name'])) for row in data),
+        rows='\n'.join(
+            html_table_row(row, columns, onclick='onclick="loadUrl(\'{}\')"'.format(click_url + row['name'])) for row in
+            data),
     )
 
 
@@ -67,11 +69,12 @@ def html_table_row(row: dict, columns: [str], onclick: str = "") -> str:
     return TR.format(
         cls='' if len(columns) == 2 else 'Record',
         onclick=onclick,
-        cells=''.join(TD.format(A.format(val=row[key]) if row[key].startswith('http') else row[key]) for key in columns),
+        cells=''.join(
+            TD.format(A.format(val=row[key]) if row[key].startswith('http') else row[key]) for key in columns),
     )
 
 
-def html_record(data: dict = {}, fields: [str] = []) -> str:
+def html_record(data: dict = None, fields: [str] = None) -> str:
     columns = ['field', 'value']
     return TABLE.format(
         head=html_table_head(columns),
@@ -87,8 +90,8 @@ def index() -> str:
     return HTML_HEAD + '''
 <p><a href="{root}tasks">Tasks</a> | <a href="{root}systems">Systems</a></p>
 '''.format(root=g_root_url) + \
-    html_table() + \
-    HTML_TAIL
+           html_table() + \
+           HTML_TAIL
 
 
 def html_tasks() -> str:
@@ -97,8 +100,8 @@ def html_tasks() -> str:
     return HTML_HEAD + '''
 <p><b>Tasks</b> | <a href="{root}systems">Systems</a></p>
 '''.format(root=g_root_url) + \
-    html_table(data, columns, click_url='{}tasks/'.format(g_root_url)) + \
-    HTML_TAIL
+        html_table(data, columns, click_url='{}tasks/'.format(g_root_url)) + \
+        HTML_TAIL
 
 
 def html_task(name: str = '') -> str:
@@ -108,8 +111,8 @@ def html_task(name: str = '') -> str:
     return HTML_HEAD + '''
 <p><a href="{root}tasks">Tasks</a> | <a href="{root}systems">Systems</a></p>
 '''.format(root=g_root_url) + \
-    html_record(task, fields) + \
-    HTML_TAIL
+        html_record(task, fields) + \
+        HTML_TAIL
 
 
 def html_systems() -> str:
@@ -118,8 +121,8 @@ def html_systems() -> str:
     return HTML_HEAD + '''
 <p><a href="{root}tasks">Tasks</a> | <b>Systems</b></p>
 '''.format(root=g_root_url) + \
-    html_table(data, columns, click_url='{}systems/'.format(g_root_url)) + \
-    HTML_TAIL
+        html_table(data, columns, click_url='{}systems/'.format(g_root_url)) + \
+        HTML_TAIL
 
 
 def html_system(name: str = '') -> str:
@@ -129,8 +132,8 @@ def html_system(name: str = '') -> str:
     return HTML_HEAD + '''
 <p><a href="{root}tasks">Tasks</a> | <a href="{root}systems">Systems</a></p>
 '''.format(root=g_root_url) + \
-    html_record(system, fields) + \
-    HTML_TAIL
+        html_record(system, fields) + \
+        HTML_TAIL
 
 
 # REST API

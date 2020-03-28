@@ -32,7 +32,7 @@ class Email(object):
         self.smpt.login(self.username, self.password)
 
     def send(self, content: str, recipients: list,
-             subject: str = '', html_head: str = '', file_paths: list = [], email_from=''):
+             subject: str = '', html_head: str = '', file_paths: list = None, email_from=''):
         assert content, 'missing content'
         assert recipients, 'missing recipients'
 
@@ -77,7 +77,7 @@ class Email(object):
 class FakeEmail(object):
 
     def send(self, content: str, recipients: list,
-             subject: str = '', html_head: str = '', file_paths: list = [], email_from=''):
+             subject: str = '', html_head: str = '', file_paths: list = None, email_from=''):
 
         print('from:', email_from)
         print('to:', recipients)
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     fnames = ['README.md']
     email.send(
         recipients=['avital.yahel@gmail.com'],
-        subject='Demo: html content{}'.format(' with attachement' if fnames else ''),
-        content='This is html content{}.'.format(', with attachements' if fnames else ''),
-        attach_fnames=fnames,
+        subject='Demo: html content{}'.format(' with attachments' if fnames else ''),
+        content='This is html content{}.'.format(', with attachments' if fnames else ''),
+        file_paths=fnames,
     )

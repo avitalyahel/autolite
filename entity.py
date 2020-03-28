@@ -1,8 +1,11 @@
+from typing import Iterator
+
 import db
 import schema
 
 
 class MetaEntity(type):
+    _tableName = ''
 
     @property
     def tableName(self):
@@ -10,7 +13,6 @@ class MetaEntity(type):
 
 
 class Entity(metaclass=MetaEntity):
-    _tableName = ''
 
     def __init__(self, name: str = '', record: schema.TableSchema = None):
         assert bool(name) ^ bool(record), 'may init with name XOR record'
@@ -43,7 +45,7 @@ class Entity(metaclass=MetaEntity):
         return cls(record=db.create(cls.tableName, **kwargs))
 
     @classmethod
-    def list(cls, **kwargs) -> tuple:
+    def list(cls, **kwargs) -> Iterator:
         return (cls(record=db_record) for db_record in db.list_table(cls.tableName, **kwargs))
 
     @property

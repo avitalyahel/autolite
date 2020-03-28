@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3
-'''
+"""
 autolite crontab job.
 
 Usage:
@@ -11,7 +11,8 @@ Options:
     -v --verbose            Higher verbosity messages.
     -t --timeout <sec>      Task timeout in seconds [default: 0].
     -i --interval <sec>     Poll interval in seconds [default: 1].
-'''
+"""
+
 import os
 import sys
 from time import sleep
@@ -54,7 +55,7 @@ def main(arguments):
                     task_procs.start(task)
                     verbose(1, task.name, 'started')
 
-            running = task_procs.serve(timeout)
+            running = task_procs.serve(int(timeout))
 
             if not running:
                 verbose(0, 'no running tasks, breaking.')

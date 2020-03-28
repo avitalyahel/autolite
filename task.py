@@ -74,7 +74,7 @@ class Task(Entity):
                                type(email_settings.port),
                                type(email_settings.username),
                                type(email_settings.password),
-                               '\nNotifiying to stdout.')
+                               '\nNotifying to stdout.')
                     self._mailClient = mail.FakeEmail()
 
         return self._mailClient
@@ -118,7 +118,7 @@ class Task(Entity):
     @property
     def condition(self) -> bool:
         condition = self.inheritedAttr('condition')
-        result = not condition or not os.system('export AUTOLITE_TASK_NAME="{}" ; '.format(self.name) + condition)
+        result = not condition or not os.system('export AUTOLITE_TASK_NAME="{}" ; '.format(self.name) + str(condition))
         verbose(2, 'condition:', condition, 'result:', result)
         return result
 

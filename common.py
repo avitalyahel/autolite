@@ -25,7 +25,7 @@ class AttrDict(dict):
     def __setattr__(self, name, value):
         self[name] = value
 
-    def update(self, keyvalues: dict):
+    def update(self, keyvalues: dict, **kwargs):
         for k, v in keyvalues.items():
             if k in self and isinstance(v, dict):
                 self[k].update(v)
@@ -55,7 +55,7 @@ def redirected_stdout_context(*cli) -> io.StringIO:
         yield buf
 
 
-def fmtprint(values, formats=[], sep=' '):
+def fmtprint(values, formats=None, sep=' '):
     for val, fmt in itertools.zip_longest(values, formats, fillvalue='{}'):
         print(fmt.format(val), end=sep)
     print()

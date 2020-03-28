@@ -1,4 +1,4 @@
-'''
+"""
 autolite installation tool.
 
 Usage:
@@ -8,7 +8,7 @@ Options:
     -h --help               Show this screen.
     -v --verbose            Higher verbosity messages.
     --verify                Only verify, without installing missing packagaes.
-'''
+"""
 
 import os
 import sys
@@ -23,21 +23,22 @@ _, SELF_FULL_DIR, _ = consts.get_self_path_dir(__file__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbose', dest='verbose', action="store_true", help='Higher verbosity messages')
-parser.add_argument('--verify', dest='verify', action="store_true", help='Only verify, without installing missing packagaes')
+parser.add_argument('--verify', dest='verify', action="store_true",
+                    help='Only verify, without installing missing packagaes')
 arguments = parser.parse_args()
 
 
 def system_out(*cmd):
     return subprocess.run(' '.join(cmd),
-        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
-        ).stdout
+                          shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+                          ).stdout
 
 
 pip3 = system_out('which pip3').split('\n')[0]
 verbose(1, 'pip3:', pip3)
 
 
-def read_pip_list_dict() -> dict():
+def read_pip_list_dict() -> dict:
     return dict(entry.split(' ') for entry in system_out('pip3 list').split('\n') if entry)
 
 

@@ -36,9 +36,6 @@ def menu(arguments):
             elif arguments['delete']:
                 System(arguments['<name>']).delete()
 
-            elif arguments['reset']:
-                system_reset(arguments)
-
         except NameError as exc:
             print(PACKAGE_NAME, 'Error!', exc)
             sys.exit(1)
@@ -72,7 +69,7 @@ def _system_list_table(arguments):
         col_names = 'name ip user installer cleaner config monitor comment'.split(' ')
 
     elif arguments['--fields']:
-            col_names = arguments['--fields'].lower().split(',')
+        col_names = arguments['--fields'].lower().split(',')
 
     else:
         col_names = ['name']
@@ -82,7 +79,7 @@ def _system_list_table(arguments):
 
     where = dict(name=arguments['<name>']) if arguments['<name>'] else dict()
     systems = db.list_table('systems', **where)
-    rows = ([sys[col] for col in col_names] for sys in systems)
+    rows = ([system[col] for col in col_names] for system in systems)
 
     col_titles = [name.upper() for name in col_names]
     common.print_table(col_titles, sorted(rows, key=lambda row: row[0]))
@@ -105,6 +102,7 @@ def system_set(arguments):
     db.update('systems', name=arguments['<name>'], **kwargs)
     arguments['--fields'] = 'name,' + ','.join(kwargs.keys())
     _system_list_table(arguments)
+
 
 def system_execute(arguments) -> bool:
     if arguments['set']:

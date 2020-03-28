@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from typing import Iterator
 
 import settings
 from common import AttrDict
@@ -158,7 +159,7 @@ def delete(table, name):
     verbose(1, 'deleted', table[:-1] + ':', name)
 
 
-def list_table(table, **where) -> tuple:
+def list_table(table, **where) -> Iterator:
     return (_new_schema(table, row) for row in rows(table, **where))
 
 

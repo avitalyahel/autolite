@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3
-'''
+"""
 autolite control tool unit test.
 
 Usage:
@@ -13,7 +13,7 @@ Options:
     -v --verbose    Higher verbosity messages.
     -l --list       List name of test cases.
     --resume        Resume next on failure.
-'''
+"""
 
 import re
 import os
@@ -33,7 +33,6 @@ import settings
 from task import Task
 from common import AttrDict, redirected_stdout_context
 from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_context
-
 
 autolite = imp.load_source('autolite', './autolite')
 runner = imp.load_source('runner', './runner')
@@ -87,8 +86,8 @@ class AutoliteTest(unittest.TestCase):
         verbose(3, 'run autolite', ' '.join(cli))
 
         with redirected_stdout_context('autolite', *cli) as buf:
-            arguments = docopt.docopt(autolite.__doc__)
-            autolite.autolite(arguments)
+            args = docopt.docopt(autolite.__doc__)
+            autolite.autolite(args)
             result = buf.getvalue()
 
         verbose(3, 'out:\r' + result[:-1])
@@ -97,7 +96,7 @@ class AutoliteTest(unittest.TestCase):
 
     def runner(self, *cli) -> str:
         if any(c == '--interval' for c in cli):
-            cli += ('--interval 0.25', )
+            cli += ('--interval 0.25',)
 
         verbose(2, 'runner', *cli)
 
@@ -115,7 +114,7 @@ class AutoliteTestTask(AutoliteTest):
         super(AutoliteTestTask, self).setUp()
         self._taskName = 't1'
         self.autolite('task create', self.taskName, '--daily',
-            '--command bla --condition bla')
+                      '--command bla --condition bla')
         self.assertEqual(self.read_task(self.taskName).schedule, 'daily')
 
         for attr in 'command condition'.split(' '):
@@ -228,39 +227,38 @@ class TestTaskState(AutoliteTestTask):
 
 class TestTaskInherit(AutoliteTestTask):
 
-    def _create_inheritor_task(self, childName: str, parentName: str):
-        self.autolite('task create', childName, '--inherit', parentName)
+    def _create_inheritor_task(self, child_name: str, parent_name: str):
+        self.autolite('task create', child_name, '--inherit', parent_name)
 
-        parent = Task(name=parentName)
-        child = Task(name=childName)
-        self.assertEqual(child.parent, parentName)
+        parent = Task(name=parent_name)
+        child = Task(name=child_name)
+        self.assertEqual(child.parent, parent_name)
         verbose(2, 'parent:', str(parent))
         verbose(2, 'child:', str(child))
-        
+
         return parent, child
 
     def test_task_inherit_P1_positive(self):
-        childName = 'child1'
-        parent, child = self._create_inheritor_task(childName, self.taskName)
+        child_name = 'child1'
+        parent, child = self._create_inheritor_task(child_name, self.taskName)
 
         for attr in ('schedule', 'command', 'email'):
             self.assertEqual(getattr(child, attr), getattr(parent, attr), attr)
 
-        self.autolite('task set', childName, 'command', 'bla')
-        self.assertEqual(self.read_task(childName).command, 'bla')
-        child = Task(name=childName)
+        self.autolite('task set', child_name, 'command', 'bla')
+        self.assertEqual(self.read_task(child_name).command, 'bla')
+        child = Task(name=child_name)
         self.assertNotEqual(child.command, parent.command)
 
-        self.autolite('task delete', childName)
+        self.autolite('task delete', child_name)
 
     def test_task_inherit_P2_negative(self):
-        childName = 'child2'
-        parent, child = self._create_inheritor_task(childName, self.taskName)
+        child_name = 'child2'
+        parent, child = self._create_inheritor_task(child_name, self.taskName)
 
-        save_parent = child.parent
         db.update('tasks', name=child.name, parent='')
 
-        failed_child = Task(name=childName)
+        failed_child = Task(name=child_name)
 
         with self.assertRaises(AssertionError):
             verbose(2, 'failed child:', str(failed_child))
@@ -325,19 +323,19 @@ class TestTaskListFilters(AutoliteTestTask):
         super(TestTaskListFilters, self).setUp()
 
         for i in range(4):
-            name = self.taskName + '.%d' % (i+1)
+            name = self.taskName + '.%d' % (i + 1)
             self.autolite('task create', name,
-                '--'+schema.SCHEDULES[i%len(schema.SCHEDULES)],
-                '--command', 'cmd%d' % (i+1),
-                '--condition', 'if%d' % (i+1),
-            )
+                          '--' + schema.SCHEDULES[i % len(schema.SCHEDULES)],
+                          '--command', 'cmd%d' % (i + 1),
+                          '--condition', 'if%d' % (i + 1),
+                          )
 
             resource = ''
-            if i > 0 :
+            if i > 0:
                 resource += 'resource-0'
 
             if i % 2:
-                resource += ' resource-%d' % (i+1)
+                resource += ' resource-%d' % (i + 1)
 
             if resource:
                 db.update(table='tasks', name=name, resources=resource)
@@ -345,7 +343,7 @@ class TestTaskListFilters(AutoliteTestTask):
 
     def tearDown(self):
         for i in range(4):
-            name = self.taskName + '.%d' % (i+1)
+            name = self.taskName + '.%d' % (i + 1)
             self.autolite('task delete', name)
 
         super(TestTaskListFilters, self).tearDown()
@@ -353,7 +351,7 @@ class TestTaskListFilters(AutoliteTestTask):
     def test_task_P1_fields(self):
         for field in schema.TABLE_SCHEMAS.tasks.keys():
             out = self.autolite('task list -f', field)
-            verbose(2, '\n'+out)
+            verbose(2, '\n' + out)
             self.assertIn(field.upper(), out)
 
             for other in schema.TABLE_SCHEMAS.tasks.keys():
@@ -362,12 +360,12 @@ class TestTaskListFilters(AutoliteTestTask):
 
     def test_task_P1_name(self):
         for i in range(4):
-            name = self.taskName + '.%d' % (i+1)
+            name = self.taskName + '.%d' % (i + 1)
             out = self.autolite('task list', name)
             self.assertIn(name, out)
 
-            for i in range(4):
-                other = self.taskName + '.%d' % (i+1)
+            for j in range(4):
+                other = self.taskName + '.%d' % (j + 1)
 
                 if other != name:
                     assert other not in out
@@ -375,18 +373,18 @@ class TestTaskListFilters(AutoliteTestTask):
     def test_task_P1_holdings(self):
         for i in range(4):
             if i % 2:
-                resource = 'resource-%d' % (i+1)
+                resource = 'resource-%d' % (i + 1)
                 out = self.autolite('task list -l', '--holding', resource)
-                verbose(2, 'holding', resource+':', '\n' + out)
+                verbose(2, 'holding', resource + ':', '\n' + out)
                 self.assertEqual(len(out.split('\n')), 3 if i % 2 else 2)
                 self.assertIn(resource, out)
 
                 for holding in ['', '--holding resource-0']:
                     out = self.autolite('task list -l', '--not-holding', resource, holding)
                     if holding == '':
-                        verbose(2, 'not holding', resource+':', '\n' + out)
+                        verbose(2, 'not holding', resource + ':', '\n' + out)
                     else:
-                        verbose(2, 'not holding', resource, 'and', holding+':', '\n' + out)
+                        verbose(2, 'not holding', resource, 'and', holding + ':', '\n' + out)
                     self.assertEqual(out.count(resource), 0, 'unexpected ' + resource + '\n' + out)
 
         out = self.autolite('task list -l', '--holding', 'resource-')
@@ -400,7 +398,7 @@ class AutoliteTestSystem(AutoliteTest):
         super(AutoliteTestSystem, self).setUp()
         self._systemName = 's1'
         self.autolite('system create', self.systemName,
-            '--ip ip --installer=exe --cleaner=exe --monitor=exe --config=exe --comment=text')
+                      '--ip ip --installer=exe --cleaner=exe --monitor=exe --config=exe --comment=text')
         self.assertEqual(self.read_system(name=self.systemName).ip, 'ip')
         self.assertEqual(self.read_system(name=self.systemName).comment, 'text')
 
@@ -498,17 +496,17 @@ class TestSystemListFilters(AutoliteTestSystem):
         super(TestSystemListFilters, self).setUp()
 
         for i in range(4):
-            name = self.systemName + '.%d' % (i+1)
+            name = self.systemName + '.%d' % (i + 1)
             self.autolite('system create', name,
-                '--installer', 'ins%d' % (i+1),
-                '--cleaner', 'cln%d' % (i+1),
-                '--monitor', 'mon%d' % (i+1),
-                '--config', 'conf%d' % (i+1),
-            )
+                          '--installer', 'ins%d' % (i + 1),
+                          '--cleaner', 'cln%d' % (i + 1),
+                          '--monitor', 'mon%d' % (i + 1),
+                          '--config', 'conf%d' % (i + 1),
+                          )
 
     def tearDown(self):
         for i in range(4):
-            name = self.systemName + '.%d' % (i+1)
+            name = self.systemName + '.%d' % (i + 1)
             self.autolite('system delete', name)
 
         super(TestSystemListFilters, self).tearDown()
@@ -516,7 +514,7 @@ class TestSystemListFilters(AutoliteTestSystem):
     def test_system_list_fields(self):
         for field in schema.TABLE_SCHEMAS.systems.keys():
             out = self.autolite('system list -f', field)
-            verbose(2, '\n'+out)
+            verbose(2, '\n' + out)
             self.assertIn(field.upper(), out)
 
             for other in schema.TABLE_SCHEMAS.systems.keys():
@@ -562,7 +560,7 @@ class TestRunner(AutoliteTestTask):
         os.remove('assert-arg.py')
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
 
-    def _create_task_once(self, name: str, command: str ='true'):
+    def _create_task_once(self, name: str, command: str = 'true'):
         self.autolite('task create', name, '--continuous', '--once')
         self.autolite('task set', name, 'command', command)
 
@@ -633,12 +631,14 @@ class TestCookBook(AutoliteTestTask):
 
     def test_job_queue(self):
         self.autolite('task create queue --continuous')
-        db.update(table='tasks', name='queue', condition='if [ `autolite task list queue -r --holding Mine | wc -l` -gt 1 ] ; then exit 1 ; fi')
+        db.update(table='tasks', name='queue',
+                  condition='if [ `autolite task list queue -r --holding Mine | wc -l` -gt 1 ] ; then exit 1 ; fi')
 
         for i in range(3):
-            job_name = 'job%d' % (i+1)
+            job_name = 'job%d' % (i + 1)
             self.autolite('task create', job_name, '--inherit queue --once')
-            db.update(table='tasks', name=job_name, command='autolite task set $AUTOLITE_TASK_NAME resources Mine && sleep 0.5')
+            db.update(table='tasks', name=job_name,
+                      command='autolite task set $AUTOLITE_TASK_NAME resources Mine && sleep 0.5')
 
         for job in self.autolite('task list queue -r').split('\n'):
             job_name = job.split(':')[0].strip()
@@ -652,9 +652,9 @@ class TestCookBook(AutoliteTestTask):
                 self.read_task(job_name)
 
 
-def suite(testCases: (unittest.TestCase, )) -> unittest.TestSuite:
-    loadedTests = unittest.defaultTestLoader.loadTestsFromTestCase
-    return unittest.TestSuite(loadedTests(case) for case in testCases)
+def suite(test_cases: (unittest.TestCase,)) -> unittest.TestSuite:
+    loaded_tests = unittest.defaultTestLoader.loadTestsFromTestCase
+    return unittest.TestSuite(loaded_tests(case) for case in test_cases)
 
 
 class TestLister(object):
@@ -663,7 +663,7 @@ class TestLister(object):
         pass
 
     def run(self, suite: unittest.TestSuite):
-        count = sum(1 for case in suite for test in case._tests)
+        count = sum(len(case._tests) for case in suite)
         padding = math.ceil(math.log(count, 10))
 
         i = 0
@@ -684,7 +684,6 @@ ALL_TEST_CASES = (
     TestRunner,
     TestCookBook,
 )
-
 
 if __name__ == '__main__':
     arguments = docopt.docopt(__doc__)

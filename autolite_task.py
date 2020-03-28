@@ -63,10 +63,10 @@ def task_lineage(arguments):
         return _holdings_filter(task, arguments)
 
     if arguments['--YAML'] or arguments['--JSON']:
-        common.dump(_task_lineage_dicts(parent=name, task_filter=lineage_filter), 
-            toyaml=arguments['--YAML'], 
-            tojson=arguments['--JSON'],
-        )
+        common.dump(_task_lineage_dicts(parent=name, task_filter=lineage_filter),
+                    toyaml=arguments['--YAML'],
+                    tojson=arguments['--JSON'],
+                    )
 
     else:
         _print_task_lineage(_task_lineage_dicts(parent=name, task_filter=lineage_filter), long=arguments['--long'])
@@ -74,7 +74,7 @@ def task_lineage(arguments):
 
 def _holdings_filter(task: Task, arguments: dict) -> bool:
     return (arguments['--holding'] is None or task.holdingAny(arguments['--holding'])) \
-       and (arguments['--not-holding'] is None or not task.holdingAny(arguments['--not-holding']))
+           and (arguments['--not-holding'] is None or not task.holdingAny(arguments['--not-holding']))
 
 
 def _task_create_kwargs(arguments):
@@ -112,7 +112,7 @@ def _task_sched_kwargs(arguments):
     return dict()
 
 
-def _task_lineage_dicts(parent: str = '', task_filter = lambda task: True) -> [dict]:
+def _task_lineage_dicts(parent: str = '', task_filter=lambda task: True) -> [dict]:
     tasks = []
     stack = [tasks]
 
@@ -291,4 +291,3 @@ def task_reset(arguments):
 
     task.reset()
     _task_list_table(arguments)
-

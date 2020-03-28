@@ -2,7 +2,7 @@
 
 import schema
 
-__doc__ = '''
+__doc__ = """
 autolite control tool.
 
 Usage:
@@ -53,7 +53,7 @@ Options:
     --cleaner <exe>             System cleaning executable.
     --monitor <exe>             System monitoring executable.
     --config <exe>              System configuration executable.
-'''.format(
+""".format(
     sched_flags=' | '.join(('--' + sched) for sched in schema.SCHEDULES),
     sched_opts='\n'.join(
         '    -{upchar}, --{sched:21} Set task schedule to \'{sched}\'.'.format(sched=sched, upchar=sched[0].upper())
@@ -72,19 +72,20 @@ from verbosity import set_verbosity, get_verbosity_level
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
 
-def autolite(arguments):
+
+def autolite(args):
     db.init()
 
-    if arguments['task']:
-        autolite_task.menu(arguments)
+    if args['task']:
+        autolite_task.menu(args)
 
-    elif arguments['system']:
-        autolite_system.menu(arguments)
+    elif args['system']:
+        autolite_system.menu(args)
 
-    elif arguments['test']:
+    elif args['test']:
         os.system('./autolite_test ' +
                   '-{} '.format('v' * max(get_verbosity_level(), 1)) +
-                  ' '.join(arg for arg in arguments['<arg>'] if arg != '--'))
+                  ' '.join(arg for arg in args['<arg>'] if arg != '--'))
 
 
 def _verbosity_flags(doc: str) -> str:
@@ -95,7 +96,7 @@ def _verbosity_flags(doc: str) -> str:
 
 
 if __name__ == '__main__':
-    rc = 1
+    rc = 0
 
     with chdir_context(SELF_FULL_DIR):
         from docopt import docopt
@@ -108,6 +109,10 @@ if __name__ == '__main__':
         if get_verbosity_level() > 1:
             print(arguments)
 
-        rc = autolite(arguments)
+        try:
+            autolite(arguments)
+
+        except:
+            rc = 1
 
     sys.exit(rc)
