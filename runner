@@ -79,7 +79,7 @@ def main(arguments):
 
 
 if __name__ == '__main__':
-    rc = 1
+    rc = 0
 
     with chdir_context(SELF_FULL_DIR):
         from docopt import docopt
@@ -92,6 +92,10 @@ if __name__ == '__main__':
         if get_verbosity_level() > 1:
             print(arguments)
 
-        rc = main(arguments)
+        try:
+            main(arguments)
+
+        except:
+            rc = 1
         
     sys.exit(rc)
