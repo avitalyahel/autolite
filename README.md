@@ -29,7 +29,7 @@ The two are not directly connected, rather may be associated by scripts.
 
 ## Getting Started
 
-#### 1) Clone the packge & install from: [GitHub](http://github.com/avitalyahel/autolite)
+#### 1) Clone the package & install from: [GitHub](http://github.com/avitalyahel/autolite)
 
 ```
 git clone http://github.com/avitalyahel/autolite
@@ -53,7 +53,7 @@ crontab -e
 
 ```
 MAILTO=""
-* * * * * $AUTOLITE_DIR/runner 2>&1
+* * * * * $AUTOLITE_DIR/runner 1>/var/log/autolite/runner.log 2>/var/log/autolite/runner.err
 ```
 
 This shall execute `autolite/runner` every minute, and let **autolite** manage scheduling & notifications.
@@ -162,18 +162,24 @@ Resetting the Db is done simply by deleting the Db file. Over NFS, permissions m
 autolite control tool. [-v | -vv]
 
 Usage:
-    autolite task list [-l | -J | -Y] [-r] [-v | -vv]
-    autolite task create <name> (--daily | --hourly | --continuous | --never) [-v | -vv]
-                     [--command=<exe>] [--condition=<exe>]
-    autolite (task | system) (read | delete) <name> [-v | -vv]
+    autolite task list [-1 | -l | -J | -Y | -f=<fields>] [-r] [-v | -vv]
+                    [<name> | --ancestor=<ancestor>]
+                    [--not-holding=<resources>] [--holding=<resources>]
+    autolite task create <name> [--daily | --hourly | --continuous | --never] [--once] [-v | -vv]
+                    [--command=<exe>] [--condition=<exe>] [--inherit=<parent>]
+    autolite (task | system) read <name> [-J | -Y] [-v | -vv]
+    autolite (task | system) delete <name> [-v | -vv]
     autolite task set <name> schedule (--daily | --hourly | --continuous | --never) [-v | -vv]
     autolite task set <name> (condition | command) <exe> [-v | -vv]
     autolite task set <name> parent <parent> [-v | -vv]
     autolite task set <name> email <email> [-v | -vv]
+    autolite task set <name> resources <resources> [-v | -vv]
+    autolite task set <name> log <text> [-v | -vv]
+    autolite task abort <name> [-y] [-v | -vv]
     autolite task reset <name> [--force] [-v | -vv]
-    autolite system list [-l | -J | -Y] [-v | -vv]
+    autolite system list [-1 | -l | -J | -Y | -f=<fields>] [<name>] [-v | -vv]
     autolite system create <name> [--ip <ip>] [-v | -vv]
-                     [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>]
+                    [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>] [--comment=<text>]
     autolite system set <name> ip <ip> [-v | -vv]
     autolite system set <name> comment <text> [-v | -vv]
     autolite system set <name> (installer | cleaner | monitor | config) <exe> [-v | -vv]
@@ -182,27 +188,39 @@ Usage:
     autolite test [-- <arg>...] [-v | -vv]
 
 Options:
-    -h --help               Show this screen.
-    --version               Show version.
-    -v --verbose            Higher verbosity messages.
-    -l --long               Table list long format.
-    -J --JSON               List with JSON format.
-    -Y --YAML               List with YAML format.
-    -r --recursive          Task recursive listing, by lineage, including subtask state summary.
-    --force                 Force the command.
-    -D, --daily             Set task schedule to 'daily'.
-    -H, --hourly            Set task schedule to 'hourly'.
-    -C, --continuous        Set task schedule to 'continuous'.
-    -N, --never             Set task schedule to 'never'.
-    --command <exe>         Task command executable.
-    --condition <exe>       Task condition executable (returns true|false).
-    --installer <exe>       System installation executable.
-    --cleaner <exe>         System cleaning executable.
-    --monitor <exe>         System monitoring executable.
-    --config <exe>          System configuration executable.
+    -h --help                   Show this screen.
+    --version                   Show version.
+    -v --verbose                Higher verbosity messages.
+    -l --long                   Table list long format.
+    -1 --col-1                  Table list main column only.
+    -J --JSON                   List with JSON format.
+    -Y --YAML                   List with YAML format.
+    -y --yes                    Skip confirmation.
+    -r --recursive              Task recursive listing, by lineage, including subtask state summary.
+    -f --fields <fields>          Table list showing specifies fields only.
+    --inherit <parent>          Set parent and reuse it's attributes.
+    --ancestor <ancestor>       With task list, filter the tasks which are descendants of <ancestor>.
+    --holding <resources>       With task list, filter the tasks holding specified resource.
+    --not-holding <resources>   With task list, filter the tasks not holding specified resource.
+    --force                     Force the command.
+    --once                      Run task only once.
+    -D, --daily                 Set task schedule to 'daily'.
+    -H, --hourly                Set task schedule to 'hourly'.
+    -C, --continuous            Set task schedule to 'continuous'.
+    -N, --never                 Set task schedule to 'never'.
+    --command <exe>             Task command executable.
+    --condition <exe>           Task condition executable (returns true|false).
+    --installer <exe>           System installation executable.
+    --cleaner <exe>             System cleaning executable.
+    --monitor <exe>             System monitoring executable.
+    --config <exe>               System configuration executable.
 ```
+
+## Cook Book
+
+Examples for Daily Regression Job and Queue at [GitHub/wiki](https://github.com/avitalyahel/autolite/wiki/Cook-Book).
 
 ## Open Issues
 
-The open issues are mangaged at [GitHub/issues](https://github.com/avitalyahel/autolite/issues).
+The open issues are managed at [GitHub/issues](https://github.com/avitalyahel/autolite/issues).
 
