@@ -21,6 +21,7 @@ Usage:
     autolite task set <name> email <email>
     autolite task set <name> resources <resources>
     autolite task set <name> log <text>
+    autolite task abort <name> [-y]
     autolite task reset <name> [--force]
     autolite system list [-1 | -l | -J | -Y | -f=<fields>] [<name>]
     autolite system create <name> [--ip <ip>]
@@ -40,10 +41,11 @@ Options:
     -1 --col-1                  Table list main column only.
     -J --JSON                   List with JSON format.
     -Y --YAML                   List with YAML format.
+    -y --yes                    Skip confirmation.
     -r --recursive              Task recursive listing, by lineage, including subtask state summary.
-    -f --fields <fields>        Table list showing specifies fields only.
+    -f --fields <fields>          Table list showing specifies fields only.
     --inherit <parent>          Set parent and reuse it's attributes.
-    --ancestor <ancestor>       With task list, filter the tasks which are decendants of <ansector>.
+    --ancestor <ancestor>       With task list, filter the tasks which are descendants of <ancestor>.
     --holding <resources>       With task list, filter the tasks holding specified resource.
     --not-holding <resources>   With task list, filter the tasks not holding specified resource.
     --force                     Force the command.
@@ -54,7 +56,7 @@ Options:
     --installer <exe>           System installation executable.
     --cleaner <exe>             System cleaning executable.
     --monitor <exe>             System monitoring executable.
-    --config <exe>              System configuration executable.
+    --config <exe>               System configuration executable.
 """.format(
     sched_flags=' | '.join(('--' + sched) for sched in schema.SCHEDULES),
     sched_opts='\n'.join(

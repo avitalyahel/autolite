@@ -16,11 +16,14 @@ Options:
     --resume        Resume next on failure.
 """
 
+import datetime
 import re
 import os
+import subprocess
 import sys
 
 import math
+import time
 import yaml
 import json
 import getpass
@@ -29,6 +32,7 @@ import unittest
 import docopt
 
 import db
+import consts
 import common
 import schema
 import settings
@@ -38,6 +42,8 @@ from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_con
 
 autolite = common.load_module('autolite')
 runner = common.load_module('runner')
+
+SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
 
 
 class AutoliteTest(unittest.TestCase):
@@ -550,7 +556,7 @@ class TestRunner(AutoliteTestTask):
         self.autolite('task set', self.taskName, 'schedule --continuous')
         self.assertEqual(self.read_task(self.taskName).schedule, 'continuous')
 
-    def test_runner_task_arg(self):
+    def test_runner_task_name_env_var(self):
         with open('assert-arg.py', 'w') as f:
             f.write('\n'.join([
                 'import os',
@@ -561,10 +567,6 @@ class TestRunner(AutoliteTestTask):
         self.runner(self._v)
         os.remove('assert-arg.py')
         self.assertEqual(self.read_task(self.taskName).state, 'pending')
-
-    def _create_task_once(self, name: str, command: str = 'true'):
-        self.autolite('task create', name, '--continuous', '--once')
-        self.autolite('task set', name, 'command', command)
 
     def test_runner_task_P2_once(self):
         self._create_task_once(name='once')
@@ -618,6 +620,23 @@ class TestRunner(AutoliteTestTask):
             self.runner(self._v)
             lasts = (self.read_task(self.taskName).last, task_last)
             self.assertNotEqual(*lasts)
+
+    def test_runner_P2_abort(self):
+        db.update('tasks', name=self.taskName, command='sleep 60', last='')
+
+        proc = subprocess.Popen(os.path.join(SELF_FULL_DIR, 'runner'))
+
+        time.sleep(2)
+        self.autolite('task abort', self.taskName, '-y')
+
+        common.wait_until(lambda: self.read_task(self.taskName).state == 'failed',
+                          timeout=datetime.timedelta(seconds=10))
+
+        proc.wait()
+
+    def _create_task_once(self, name: str, command: str = 'true'):
+        self.autolite('task create', name, '--continuous', '--once')
+        self.autolite('task set', name, 'command', command)
 
 
 class TestCookBook(AutoliteTestTask):

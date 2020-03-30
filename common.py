@@ -1,14 +1,22 @@
-import io
-import os
-import sys
-import yaml
-import json
 import getpass
 import importlib.util
 import importlib.machinery
 import itertools
+import json
+import os
+import io
 import subprocess
+import sys
+import time
 from contextlib import contextmanager, redirect_stdout
+from typing import Callable
+
+import yaml
+from datetime import datetime, timedelta
+
+import consts
+
+SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
 
 
 class AttrDict(dict):
@@ -129,6 +137,16 @@ def load_module(file_name: str) -> object:
     spec.loader.exec_module(module)
 
     return module
+
+
+def wait_until(predicate: Callable, timeout: timedelta, interval: int = 1):
+    start = datetime.now()
+
+    while datetime.now() - start < timeout and not predicate():
+        time.sleep(interval)
+
+    if datetime.now() - start >= timeout:
+        raise TimeoutError('timed-out after {}'.format(timeout))
 
 
 if __name__ == '__main__':

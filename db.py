@@ -44,6 +44,7 @@ class TableColumns(object):
 
 def connect():
     global g_conn
+
     if g_conn is None:
         global g_db_path
         g_db_path = os.path.expanduser(settings.read().db_path)
@@ -53,6 +54,7 @@ def connect():
 
 def disconnect():
     global g_conn
+
     if g_conn is not None:
         g_conn.commit()
         g_conn.close()

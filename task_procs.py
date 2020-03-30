@@ -13,9 +13,18 @@ g_procs = {}
 
 def start(task: Task):
     global g_procs
+
     g_procs.update({task.name: _new_task_proc(task)})
     verbose(2, 'proc pool added with:', g_procs[task.name])
     task.start()
+
+
+def terminate(task: Task):
+    global g_procs
+
+    g_procs[task.name].terminate()
+    task.fail()
+    verbose(1, 'task', task.name, 'terminated')
 
 
 def serve(timeout: int) -> int:
@@ -26,6 +35,13 @@ def serve(timeout: int) -> int:
     for task_name, proc in g_procs.items():
         task = Task(task_name)
         task.reload()
+
+        if task.failed:
+            verbose(1, task.name, 'aborted')
+            terminate(task)
+            completed += [task_name]
+            continue
+
         proc.poll()
 
         if proc.returncode is not None:

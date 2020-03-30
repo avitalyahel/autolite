@@ -1,5 +1,4 @@
 import sys
-import yaml
 from collections import Counter
 from datetime import datetime
 
@@ -36,6 +35,9 @@ def menu(arguments):
 
             elif arguments['delete']:
                 Task(arguments['<name>']).delete()
+
+            elif arguments['abort']:
+                task_abort(arguments)
 
             elif arguments['reset']:
                 task_reset(arguments)
@@ -275,6 +277,23 @@ def task_set(arguments):
 
     db.update('tasks', name=arguments['<name>'], **kwargs)
     arguments['--fields'] = 'name,' + ','.join(kwargs.keys())
+    _task_list_table(arguments)
+
+
+def task_abort(arguments):
+    task = Task(arguments['<name>'])
+
+    if not task.running:
+        print(PACKAGE_NAME, 'Error! Task', task.name, 'must be running for abortion.')
+        sys.exit(1)
+
+    if not arguments['--yes']:
+        yn = input('Are you sure you want to abort {}? (y): '.format(task.name))
+
+        if yn != 'y':
+            return
+
+    task.fail()
     _task_list_table(arguments)
 
 
