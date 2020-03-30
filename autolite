@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import traceback
+
 import schema
 
 __doc__ = """
@@ -112,7 +114,8 @@ if __name__ == '__main__':
         try:
             autolite(arguments)
 
-        except:
+        except Exception as exc:
+            print('Failure!', traceback.format_exc())
             rc = 1
 
     sys.exit(rc)

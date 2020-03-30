@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 autolite crontab job.
@@ -16,6 +16,7 @@ Options:
 
 import os
 import sys
+import traceback
 from time import sleep
 from datetime import datetime
 
@@ -96,7 +97,8 @@ if __name__ == '__main__':
         try:
             main(arguments)
 
-        except:
+        except Exception as exc:
+            print('Failure!', traceback.format_exc())
             rc = 1
         
     sys.exit(rc)
