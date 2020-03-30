@@ -19,7 +19,7 @@ Options:
 import re
 import os
 import sys
-import imp
+
 import math
 import yaml
 import json
@@ -29,14 +29,15 @@ import unittest
 import docopt
 
 import db
+import common
 import schema
 import settings
 from task import Task
 from common import AttrDict, redirected_stdout_context
 from verbosity import verbose, set_verbosity, get_verbosity_level, verbosity_context
 
-autolite = imp.load_source('autolite', './autolite')
-runner = imp.load_source('runner', './runner')
+autolite = common.load_module('autolite')
+runner = common.load_module('runner')
 
 
 class AutoliteTest(unittest.TestCase):
@@ -175,7 +176,7 @@ class TestTaskCRUD(AutoliteTestTask):
                         self._assert_tasks(json.loads(out), resources)
 
                     elif task_list_flags == '-Y':
-                        self._assert_tasks(yaml.load(out), resources)
+                        self._assert_tasks(yaml.load(out, Loader=yaml.FullLoader), resources)
 
     def _assert_tasks(self, dicts: [dict], resources: str):
         if resources:
@@ -448,7 +449,7 @@ class TestSystemCRUD(AutoliteTestSystem):
                 self.assertEqual(self.systemName, json.loads(out)[0]['name'])
 
             elif system_list_flags == '-Y':
-                self.assertEqual(self.systemName, yaml.load(out)[0]['name'])
+                self.assertEqual(self.systemName, yaml.load(out, Loader=yaml.FullLoader)[0]['name'])
 
     def test_system_crud_P2_negative(self):
         with self.assertRaises(SystemExit):

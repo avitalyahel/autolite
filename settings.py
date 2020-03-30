@@ -9,11 +9,11 @@ SETTINGS_USER = SETTINGS_DEFAULT.replace('default', 'user')
 
 def read() -> AttrDict:
     with open(SETTINGS_DEFAULT) as f:
-        settings = AttrDict(yaml.load(f))
+        settings = AttrDict(yaml.load(f, Loader=yaml.FullLoader))
 
     try:
         with open(SETTINGS_USER) as f:
-            setting_dict = yaml.load(f)
+            setting_dict = yaml.load(f, Loader=yaml.FullLoader)
 
     except FileNotFoundError:
         open(SETTINGS_USER, 'w').close()
@@ -30,7 +30,7 @@ def write_context():    # yield AttrDict()
     assert read(), 'unexpected empty settings'
 
     with open(SETTINGS_USER) as f:
-        setting_dict = yaml.load(f)
+        setting_dict = yaml.load(f, Loader=yaml.FullLoader)
         user_settings = AttrDict(setting_dict) if setting_dict else AttrDict()
 
     yield user_settings

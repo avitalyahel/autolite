@@ -4,6 +4,8 @@ import sys
 import yaml
 import json
 import getpass
+import importlib.util
+import importlib.machinery
 import itertools
 import subprocess
 from contextlib import contextmanager, redirect_stdout
@@ -113,3 +115,21 @@ def chdir_context(new_dir: str):
 
     finally:
         os.chdir(old_dir)
+
+
+def load_module(file_name: str) -> object:
+    file_name = os.path.join(SELF_FULL_DIR, file_name) if not file_name.startswith('/') else file_name
+    module_name = os.path.splitext(os.path.basename(file_name))[0]
+
+    loader = importlib.machinery.SourceFileLoader(module_name, file_name)
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    assert spec, 'failed loading spec from: ' + file_name
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    return module
+
+
+if __name__ == '__main__':
+    m = load_module('autolite')
