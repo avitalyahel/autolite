@@ -35,13 +35,16 @@ class AttrDict(dict):
     def __setattr__(self, name, value):
         self[name] = value
 
-    def update(self, keyvalues: dict, **kwargs):
-        for k, v in keyvalues.items():
-            if k in self and isinstance(v, dict):
-                self[k].update(v)
+    def update(self, *args, **kwargs):
+        for arg in args:
+            for k, v in arg.items():
+                if k in self and isinstance(v, dict):
+                    self[k].update(v)
 
-            else:
-                self[k] = v
+                else:
+                    self[k] = v
+
+        super(AttrDict, self).update(**kwargs)
 
     @property
     def __dict__(self):

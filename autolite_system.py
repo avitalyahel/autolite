@@ -1,8 +1,11 @@
 import sys
 
-import db
-import consts
+import yaml
+
 import common
+import consts
+import db
+import schema
 from system import System
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
@@ -14,7 +17,8 @@ def menu(arguments):
         if arguments['--YAML'] or arguments['--JSON']:
             where = dict(name=arguments['<name>']) if arguments['<name>'] else dict()
             systems = System.list(**where)
-            common.dump(systems, toyaml=arguments['--YAML'], tojson=arguments['--JSON'], entry=lambda item: item.__dict__)
+            common.dump(systems, toyaml=arguments['--YAML'], tojson=arguments['--JSON'],
+                        entry=lambda item: item.__dict__)
 
         else:
             _system_list_table(arguments)
@@ -26,6 +30,8 @@ def menu(arguments):
         try:
             if arguments['create']:
                 System.create(**_system_create_kwargs(arguments))
+                arguments['--long'] = True
+                _system_list_table(arguments)
 
             elif arguments['read']:
                 system_read(arguments)
@@ -53,15 +59,19 @@ def system_read(arguments):
 
 
 def _system_create_kwargs(arguments):
-    return dict(
+    kwargs = schema.TABLE_SCHEMAS.systems.new()
+
+    if arguments['--fields']:
+        with open(arguments['--fields']) as f:
+            kwargs.update(yaml.safe_load(f))
+
+    kwargs.update(dict((k, arguments['--' + k] or kwargs[k]) for k in kwargs.keys() if ('--' + k) in arguments))
+    kwargs.update(
         name=arguments['<name>'],
         ip=arguments['<ip>'],
-        installer=arguments['--installer'],
-        monitor=arguments['--monitor'],
-        cleaner=arguments['--cleaner'],
-        config=arguments['--config'],
-        comment=arguments['--comment'],
     )
+
+    return kwargs
 
 
 def _system_list_table(arguments):

@@ -24,7 +24,7 @@ Usage:
     autolite task abort <name> [-y]
     autolite task reset <name> [--force]
     autolite system list [-1 | -l | -J | -Y | -f=<fields>] [<name>]
-    autolite system create <name> [--ip <ip>]
+    autolite system create <name> [--ip <ip>] [-f=<file>]
                     [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>] [--comment=<text>]
     autolite system set <name> ip <ip>
     autolite system set <name> comment <text>
@@ -43,7 +43,7 @@ Options:
     -Y --YAML                   List with YAML format.
     -y --yes                    Skip confirmation.
     -r --recursive              Task recursive listing, by lineage, including subtask state summary.
-    -f --fields <fields>          Table list showing specifies fields only.
+    -f --fields <fields>        Table list showing specifies fields only | fields YAML file for create.
     --inherit <parent>          Set parent and reuse it's attributes.
     --ancestor <ancestor>       With task list, filter the tasks which are descendants of <ancestor>.
     --holding <resources>       With task list, filter the tasks holding specified resource.
@@ -56,7 +56,7 @@ Options:
     --installer <exe>           System installation executable.
     --cleaner <exe>             System cleaning executable.
     --monitor <exe>             System monitoring executable.
-    --config <exe>               System configuration executable.
+    --config <exe>              System configuration executable.
 """.format(
     sched_flags=' | '.join(('--' + sched) for sched in schema.SCHEDULES),
     sched_opts='\n'.join(
