@@ -57,12 +57,12 @@ def html_table(data: [dict] = None, columns: [str] = None, click_url: str = '/')
         head=html_table_head(columns),
         rows='\n'.join(
             html_table_row(row, columns, onclick='onclick="loadUrl(\'{}\')"'.format(click_url + row['name'])) for row in
-            data),
+            data) if data else '',
     )
 
 
 def html_table_head(columns: [str]) -> str:
-    return ''.join(TH.format(col.title()) for col in columns)
+    return ''.join(TH.format(col.title()) for col in columns) if columns else ''
 
 
 def html_table_row(row: dict, columns: [str], onclick: str = "") -> str:
