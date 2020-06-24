@@ -1,8 +1,9 @@
-import yaml
-from datetime import datetime, timedelta
-from contextlib import contextmanager
-
 import os
+from contextlib import contextmanager
+from datetime import datetime, timedelta
+
+import yaml
+
 import db
 import mail
 import settings
@@ -18,7 +19,7 @@ class Task(Entity):
     _walkParents = []
 
     @classmethod
-    def walkIter(cls, **kwargs):    # yield task, level
+    def walkIter(cls, **kwargs):  # yield task, level
         for task in cls.list(**kwargs):
             if task.name in cls._walkParents:
                 verbose(2, task.name, 'already in parents', cls._walkParents, ', skipping.')
@@ -54,7 +55,7 @@ class Task(Entity):
     def mailClient(self) -> mail.Email:
         if not hasattr(self, '_mailClient'):
             email_settings = settings.read().email
-    
+
             if any(not value for value in email_settings.values()):
                 self._mailClient = mail.FakeEmail()
 
@@ -69,12 +70,12 @@ class Task(Entity):
 
                 except Exception as exc:
                     verbose(0, 'Warning! mail client returned with error:', str(exc),
-                               email_settings,
-                               type(email_settings.server),
-                               type(email_settings.port),
-                               type(email_settings.username),
-                               type(email_settings.password),
-                               '\nNotifying to stdout.')
+                            email_settings,
+                            type(email_settings.server),
+                            type(email_settings.port),
+                            type(email_settings.username),
+                            type(email_settings.password),
+                            '\nNotifying to stdout.')
                     self._mailClient = mail.FakeEmail()
 
         return self._mailClient
@@ -144,12 +145,13 @@ class Task(Entity):
     def holdingAny(self, resources: str) -> bool:
         return bool(self.resources and resources and (set(self.resources.split(' ')) & set(resources.split(' '))))
 
-    def start(self):
+    def start(self, log: str = ''):
         with self.notifyStateChangeContext():
             self._setLast(str(datetime.now()))
             self._db_record.state = 'running'
-            self._db_record.log = ''
-            db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last)
+            self._db_record.log = log
+            db.update('tasks', name=self.name, state=self._db_record.state, last=self._db_record.last,
+                      log=self._db_record.log)
 
     def fail(self):
         with self.notifyStateChangeContext():
@@ -170,7 +172,7 @@ class Task(Entity):
     def updateLast(self, last: str):
         self._setLast(last)
         db.update('tasks', name=self.name, last=self._db_record.last)
-        
+
     def _setLast(self, last: str):
         self._db_record.last = last + ('<once>' if self.once else '')
 

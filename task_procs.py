@@ -16,7 +16,7 @@ def start(task: Task):
 
     g_procs.update({task.name: _new_task_proc(task)})
     verbose(2, 'proc pool added with:', g_procs[task.name])
-    task.start()
+    task.start(g_procs[task.name].stdout.name)
 
 
 def terminate(task: Task):
