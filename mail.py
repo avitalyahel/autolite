@@ -1,7 +1,7 @@
 import os
 import smtplib
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from verbosity import verbose
 
@@ -26,10 +26,10 @@ class Email(object):
                  smtp_username='',
                  smtp_password=''):
 
-        self.smpt = smtplib.SMTP(smtp_server, smtp_port)
-        self.smpt.starttls()
+        self.smtp = smtplib.SMTP(smtp_server, smtp_port)
+        self.smtp.starttls()
         self.username, self.password = smtp_username, smtp_password
-        self.smpt.login(self.username, self.password)
+        self.smtp.login(self.username, self.password)
 
     def send(self, content: str, recipients: list,
              subject: str = '', html_head: str = '', file_paths: list = None, email_from=''):
@@ -61,14 +61,14 @@ class Email(object):
         msg['To'] = ', '.join(recipients)
         msg['From'] = email_from
 
-        self.smpt.sendmail(email_from, list(recipients), msg.as_string())
+        self.smtp.sendmail(email_from, list(recipients), msg.as_string())
 
         verbose(1, 'Mail sent to {}: "{}"'.format(recipients, subject))
 
     def __del__(self):
         if hasattr(self, 'smpt'):
             try:
-                self.smpt.quit()
+                self.smtp.quit()
 
             except smtplib.SMTPServerDisconnected:
                 pass
@@ -78,11 +78,16 @@ class FakeEmail(object):
 
     def send(self, content: str, recipients: list,
              subject: str = '', html_head: str = '', file_paths: list = None, email_from=''):
-
         print('from:', email_from)
         print('to:', recipients)
-        print('subjec:', subject)
+        print('subject:', subject)
         print(content)
+
+        if html_head:
+            print('html head:', html_head)
+
+        if file_paths:
+            print('file paths:', file_paths)
 
 
 if __name__ == '__main__':
