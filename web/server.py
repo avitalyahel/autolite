@@ -76,13 +76,13 @@ def html_table_row(row: dict, columns: [str], column_styles: dict = None, onclic
     )
 
 
-def html_record(data: dict = None, fields: [str] = None, head: bool = True) -> str:
+def html_record(data: dict = None, fields: [str] = None, head: bool = True, empty_values: bool = False) -> str:
     columns = ['field', 'value']
     return TABLE.format(
         head=html_table_head(columns) if head else '',
         rows='\n'.join(html_table_row(row=dict(field=field+':', value=data[field]), columns=columns,
                                       column_styles={columns[0]: 'text-align:right; font-style:italic'})
-                       for field in fields if field in data),
+                       for field in fields if field in data and (empty_values or data[field])),
     )
 
 
