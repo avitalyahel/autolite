@@ -48,7 +48,7 @@ TABLE = '''
 
 TH = '<th style="text-align:left">{}</th>'
 TR = '<tr class="{cls}" {onclick}>{cells}</tr>'
-TD = '<td nowrap style="vertical-align:top">{}</td>'
+TD = '<td nowrap style="vertical-align:top; padding:5px; {style}">{val}</td>'
 A = '<a href="{val}">{val}</a>'
 
 
@@ -56,7 +56,7 @@ def html_table(data: [dict] = None, columns: [str] = None, click_url: str = '/')
     return TABLE.format(
         head=html_table_head(columns),
         rows='\n'.join(
-            html_table_row(row, columns, onclick='onclick="loadUrl(\'{}\')"'.format(click_url + row['name'])) for row in
+            html_table_row(row, columns, onclick="loadUrl(\'{}\')".format(click_url + row['name'])) for row in
             data) if data else '',
     )
 
@@ -65,20 +65,23 @@ def html_table_head(columns: [str]) -> str:
     return ''.join(TH.format(col.title()) for col in columns) if columns else ''
 
 
-def html_table_row(row: dict, columns: [str], onclick: str = "") -> str:
+def html_table_row(row: dict, columns: [str], column_styles: dict = None, onclick: str = "") -> str:
     return TR.format(
         cls='' if len(columns) == 2 else 'Record',
-        onclick=onclick,
+        onclick='onclick={}'.format(onclick) if onclick else '',
         cells=''.join(
-            TD.format(A.format(val=row[key]) if row[key].startswith('http') else row[key]) for key in columns),
+            TD.format(val=A.format(val=row[key]) if row[key].startswith('http') else row[key],
+                      style=column_styles[key] if column_styles is not None and key in column_styles else '')
+            for key in columns),
     )
 
 
-def html_record(data: dict = None, fields: [str] = None) -> str:
+def html_record(data: dict = None, fields: [str] = None, head: bool = True) -> str:
     columns = ['field', 'value']
     return TABLE.format(
-        head=html_table_head(columns),
-        rows='\n'.join(html_table_row(dict(field=field, value=data[field]), columns)
+        head=html_table_head(columns) if head else '',
+        rows='\n'.join(html_table_row(row=dict(field=field+':', value=data[field]), columns=columns,
+                                      column_styles={columns[0]: 'text-align:right; font-style:italic'})
                        for field in fields if field in data),
     )
 
@@ -111,7 +114,7 @@ def html_task(name: str = '') -> str:
     return HTML_HEAD + '''
 <p><a href="{root}tasks">Tasks</a> | <a href="{root}systems">Systems</a></p>
 '''.format(root=g_root_url) + \
-        html_record(task, fields) + \
+        html_record(task, fields, head=False) + \
         HTML_TAIL
 
 
