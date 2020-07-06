@@ -14,7 +14,7 @@ g_procs = {}
 def start(task: Task):
     global g_procs
 
-    g_procs.update({task.name: _new_task_proc(task)})
+    g_procs.update({task.name: _new_proc(task)})
     verbose(2, 'proc pool added with:', g_procs[task.name])
     task.start(g_procs[task.name].stdout.name)
 
@@ -27,7 +27,7 @@ def terminate(task: Task):
     verbose(1, 'task', task.name, 'terminated')
 
 
-def serve(timeout: int) -> int:
+def serve(timeout: int = 0) -> int:
     global g_procs
 
     completed = []
@@ -76,7 +76,7 @@ def serve(timeout: int) -> int:
     return len(g_procs)
 
 
-def _new_task_proc(task: Task) -> subprocess.Popen:
+def _new_proc(task: Task) -> subprocess.Popen:
     logfile = open(_new_log_path(task), 'w', 1)
     result = subprocess.Popen('''
 if [ -e ~/.bashrc ]

@@ -1,13 +1,15 @@
 import sys
 from collections import Counter
 from datetime import datetime
+from time import sleep
 
-import db
-import consts
-import schema
 import common
-from task import Task
+import consts
+import db
+import schema
+import task_procs
 from common import AttrDict
+from task import Task
 from verbosity import verbose
 
 SELF_ABS_PATH, SELF_FULL_DIR, SELF_SUB_DIR = consts.get_self_path_dir(__file__)
@@ -41,6 +43,9 @@ def menu(arguments):
 
             elif arguments['reset']:
                 task_reset(arguments)
+
+            elif arguments['run']:
+                task_run(arguments)
 
         except NameError as exc:
             print(PACKAGE_NAME, 'Error!', exc)
@@ -310,3 +315,28 @@ def task_reset(arguments):
 
     task.reset()
     _task_list_table(arguments)
+
+
+def task_run(arguments):
+    task = Task(arguments['<name>'])
+
+    if task.running:
+        verbose(0, 'Warning! task', task.name, 'already running.')
+        return
+
+    task_procs.start(task)
+    log = open(task.log)
+
+    while True:
+        where = log.tell()
+        line = log.readline()
+
+        if not line:
+            if not task_procs.serve():
+                break
+
+            sleep(1)
+            log.seek(where)
+
+        else:
+            print(line)

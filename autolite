@@ -23,6 +23,7 @@ Usage:
     autolite task set <name> log <text>
     autolite task abort <name> [-y]
     autolite task reset <name> [--force]
+    autolite task run <name>
     autolite system list [-1 | -l | -J | -Y | -f=<fields>] [<name>]
     autolite system create <name> [--ip <ip>] [-f=<file>]
                     [--installer=<exe>] [--cleaner=<exe>] [--monitor=<exe>] [--config=<exe>] [--comment=<text>]
