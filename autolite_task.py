@@ -339,4 +339,4 @@ def task_run(arguments):
             log.seek(where)
 
         else:
-            print(line)
+            print(line[:-1])
